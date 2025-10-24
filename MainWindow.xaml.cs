@@ -167,9 +167,27 @@ public partial class MainWindow : Window
         {
             if (e.Key == System.Windows.Input.Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
+                BitmapSource? image = null;
+
                 if (System.Windows.Clipboard.ContainsImage())
                 {
-                    var image = System.Windows.Clipboard.GetImage();
+                    image = System.Windows.Clipboard.GetImage();
+                }
+                else if (System.Windows.Clipboard.ContainsFileDropList())
+                {
+                    var files = System.Windows.Clipboard.GetFileDropList();
+                    foreach (var file in files)
+                    {
+                        if (File.Exists(file) && IsImageFile(file))
+                        {
+                            image = LoadImageFromFile(file);
+                            if (image != null) break;
+                        }
+                    }
+                }
+
+                if (image != null)
+                {
                     note.ImageData = ConvertImageToBase64(image);
                     RefreshNoteControl(note, noteControl);
                     e.Handled = true;
@@ -352,5 +370,28 @@ public partial class MainWindow : Window
     {
         _notifyIcon?.Dispose();
         base.OnClosed(e);
+    }
+
+    private bool IsImageFile(string filePath)
+    {
+        var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+        return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif" || extension == ".bmp";
+    }
+
+    private BitmapSource? LoadImageFromFile(string filePath)
+    {
+        try
+        {
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(filePath);
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
