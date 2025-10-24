@@ -7,16 +7,32 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
+        <!-- Single-file, self-contained Windows x64 -->
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-        <PublishReadyToRun>true</PublishReadyToRun>
+        <!-- Disable R2R to avoid potential startup issues on some machines -->
+        <PublishReadyToRun>false</PublishReadyToRun>
+        <!-- Ensure culture/resource folders are not emitted; prefer invariant globalization for single-file -->
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- Compress contents inside the single-file executable -->
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+        <!-- Avoid trimming to keep WPF reflection-based components intact -->
+        <PublishTrimmed>false</PublishTrimmed>
+        <!-- Ensure native libraries are extracted to disk when running single-file (more compatible) -->
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <AssemblyTitle>JISMemo</AssemblyTitle>
         <AssemblyDescription>포스트잇 스타일 메모 애플리케이션</AssemblyDescription>
         <AssemblyCompany>JIS</AssemblyCompany>
         <AssemblyProduct>JISMemo</AssemblyProduct>
         <AssemblyVersion>1.0.1.0</AssemblyVersion>
         <FileVersion>1.0.1.0</FileVersion>
+    </PropertyGroup>
+
+    <!-- Release-specific tweaks to keep output to a single EXE (no PDB) -->
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
 
 </Project>
