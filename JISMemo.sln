@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JISMemo", "JISMemo.csproj", "{CDF2C382-1C9B-4C54-85CD-67C9D7758C4E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDF2C382-1C9B-4C54-85CD-67C9D7758C4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDF2C382-1C9B-4C54-85CD-67C9D7758C4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDF2C382-1C9B-4C54-85CD-67C9D7758C4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDF2C382-1C9B-4C54-85CD-67C9D7758C4E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
