@@ -204,10 +204,28 @@ public partial class MainWindow : Window
             AcceptsReturn = true,
             Margin = new System.Windows.Thickness(5, 2, 5, 5),
             Height = textHeight,
-            VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto
+            VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+            FontSize = note.FontSize
         };
 
+        // 텍스트 변경 시 모델에 반영
         textBox.TextChanged += (s, e) => note.Content = textBox.Text;
+
+        // Ctrl + 마우스 휠로 폰트 크기 확대/축소 (줌)
+        textBox.PreviewMouseWheel += (s, e) =>
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                e.Handled = true;
+                // 휠 한 칸(±120) 당 1pt 변경. 더 부드럽게 하려면 0.5 등으로 조정 가능
+                double step = e.Delta > 0 ? 1.0 : -1.0;
+                double newSize = note.FontSize + step;
+                if (newSize < 8) newSize = 8;
+                if (newSize > 48) newSize = 48;
+                note.FontSize = newSize;
+                textBox.FontSize = newSize;
+            }
+        };
 
         // 이미지 붙여넣기 핸들링은 기존 로직 유지
         System.Windows.DataObject.AddPastingHandler(textBox, (s, pastingArgs) =>
