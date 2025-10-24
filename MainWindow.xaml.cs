@@ -169,6 +169,9 @@ public partial class MainWindow : Window
             // 여러 형식에서 이미지 추출 시도
             imageSource = ExtractBitmapSourceFromDataObject(pastingArgs.DataObject);
 
+            // 로그 남김
+            try { LogClipboardFormats(pastingArgs.DataObject, note.Id ?? note.GetHashCode().ToString()); } catch { }
+
             // IDataObject에서 못찾으면 클립보드에서 직접 시도 (PrintScreen 등에서 CF_DIB가 올 때 안전한 경로)
             if (imageSource == null)
             {
@@ -185,6 +188,18 @@ public partial class MainWindow : Window
                 }
             }
 
+            // WinForms 경로로도 시도
+            if (imageSource == null)
+            {
+                try
+                {
+                    imageSource = ExtractFromWinFormsClipboard();
+                }
+                catch
+                {
+                }
+            }
+
             if (imageSource != null)
             {
                 note.ImageData = ConvertImageToBase64(imageSource);
@@ -192,6 +207,84 @@ public partial class MainWindow : Window
                 pastingArgs.CancelCommand();
             }
         });
+
+        // Ctrl+V가 AddPastingHandler로 잡히지 않는 경우를 보완: PreviewKeyDown에서 직접 처리
+        textBox.PreviewKeyDown += (s, ke) =>
+        {
+            if (ke.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                BitmapSource? imageSource = null;
+                try
+                {
+                    var dataObj = System.Windows.Clipboard.GetDataObject();
+                    if (dataObj != null)
+                    {
+                        imageSource = ExtractBitmapSourceFromDataObject(dataObj);
+                    }
+
+                    if (imageSource == null && System.Windows.Clipboard.ContainsImage())
+                    {
+                        imageSource = System.Windows.Clipboard.GetImage();
+                    }
+                }
+                catch
+                {
+                    // 클립보드 접근 실패 무시
+                }
+
+                if (imageSource != null)
+                {
+                    note.ImageData = ConvertImageToBase64(imageSource);
+                    RefreshNoteControl(note, noteControl);
+                    ke.Handled = true;
+                }
+            }
+        };
+
+        // Paste 명령(키/메뉴)을 확실히 가로채서 이미지 붙여넣기를 시도
+        textBox.CommandBindings.Add(new System.Windows.Input.CommandBinding(System.Windows.Input.ApplicationCommands.Paste, (s, e) =>
+        {
+            BitmapSource? imageSource = null;
+
+            try
+            {
+                var dataObj = System.Windows.Clipboard.GetDataObject();
+                if (dataObj != null)
+                {
+                    imageSource = ExtractBitmapSourceFromDataObject(dataObj);
+                }
+
+                // 로그 남김
+                try { LogClipboardFormats(dataObj, note.Id ?? note.GetHashCode().ToString()); } catch { }
+
+                if (imageSource == null && System.Windows.Clipboard.ContainsImage())
+                {
+                    imageSource = System.Windows.Clipboard.GetImage();
+                }
+            }
+            catch
+            {
+                // 클립보드 접근 실패 무시
+            }
+
+            if (imageSource == null)
+            {
+                try
+                {
+                    imageSource = ExtractFromWinFormsClipboard();
+                }
+                catch
+                {
+                }
+            }
+
+            if (imageSource != null)
+            {
+                note.ImageData = ConvertImageToBase64(imageSource);
+                RefreshNoteControl(note, noteControl);
+                e.Handled = true;
+            }
+        }));
 
         textBox.ContextMenu = CreateNoteContextMenu();
 
@@ -390,6 +483,73 @@ public partial class MainWindow : Window
         }
     }
 
+    private void EnsureLogDirectory(out string logPath)
+    {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JISMemo");
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        logPath = Path.Combine(dir, "paste_log.txt");
+    }
+
+    private void LogClipboardFormats(System.Windows.IDataObject dataObject, string noteId = "")
+    {
+        try
+        {
+            EnsureLogDirectory(out var path);
+            var formats = dataObject?.GetFormats() ?? Array.Empty<string>();
+            using var sw = new StreamWriter(path, append: true);
+            sw.WriteLine($"[{DateTime.Now:O}] Paste attempt for note {noteId}");
+            foreach (var f in formats)
+            {
+                sw.WriteLine("  " + f);
+            }
+            sw.WriteLine();
+        }
+        catch
+        {
+            // 로그 실패는 무시
+        }
+    }
+
+    // DIB(byte[])를 BMP 스트림으로 감싸서 BitmapSource로 변환
+    private BitmapSource? ConvertDibToBitmapSource(byte[] dib)
+    {
+        try
+        {
+            // BITMAPFILEHEADER (14 bytes)
+            using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms);
+
+            // bfType 'BM'
+            bw.Write((byte)'B');
+            bw.Write((byte)'M');
+
+            // bfSize = 14 + dib.Length
+            bw.Write((int)(14 + dib.Length));
+            bw.Write((short)0);
+            bw.Write((short)0);
+
+            // bfOffBits = 14 + BITMAPINFOHEADER size (assume 40)
+            bw.Write((int)(14 + 40));
+
+            // write dib
+            bw.Write(dib);
+            bw.Flush();
+            ms.Seek(0, SeekOrigin.Begin);
+
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = ms;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     // 새 헬퍼: IDataObject에서 가능한 이미지 타입들을 추출하여 BitmapSource로 반환
     private BitmapSource? ExtractBitmapSourceFromDataObject(System.Windows.IDataObject dataObject)
     {
@@ -397,6 +557,51 @@ public partial class MainWindow : Window
 
         try
         {
+            // 새로운 시도: CF_DIB (DataFormats.Dib) 처리
+            if (dataObject.GetDataPresent(System.Windows.DataFormats.Dib))
+            {
+                var dibObj = dataObject.GetData(System.Windows.DataFormats.Dib);
+                if (dibObj is byte[] dibBytes)
+                {
+                    var bs = ConvertDibToBitmapSource(dibBytes);
+                    if (bs != null) return bs;
+                }
+                else if (dibObj is MemoryStream dibStream)
+                {
+                    var arr = dibStream.ToArray();
+                    var bs = ConvertDibToBitmapSource(arr);
+                    if (bs != null) return bs;
+                }
+            }
+
+            // PNG 포맷으로 클립보드에 들어오는 경우가 있어 시도
+            if (dataObject.GetDataPresent("PNG"))
+            {
+                var pngObj = dataObject.GetData("PNG");
+                if (pngObj is MemoryStream pngStream)
+                {
+                    pngStream.Seek(0, SeekOrigin.Begin);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = pngStream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return bitmap;
+                }
+                if (pngObj is byte[] pngBytes)
+                {
+                    using var ms = new MemoryStream(pngBytes);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return bitmap;
+                }
+            }
+
             if (dataObject.GetDataPresent(System.Windows.DataFormats.Bitmap))
             {
                 var obj = dataObject.GetData(System.Windows.DataFormats.Bitmap);
@@ -477,11 +682,89 @@ public partial class MainWindow : Window
                 }
             }
 
-            // 그 외는 null 반환 (클립보드 직접 호출은 호출자에서 시도)
+            // 디버그용 로그: 어떤 포맷이 있는지 남김
+            try
+            {
+                LogClipboardFormats(dataObject);
+            }
+            catch
+            {
+            }
         }
         catch
         {
             // 예외는 흡수
+        }
+
+        return null;
+    }
+
+    // WinForms 클립보드 경로에서 이미지 얻기 시도
+    private BitmapSource? ExtractFromWinFormsClipboard()
+    {
+        try
+        {
+            // System.Windows.Forms.Clipboard는 STA에서 동작해야 함 (WPF 앱의 UI 스레드는 STA)
+            if (System.Windows.Forms.Clipboard.ContainsImage())
+            {
+                var img = System.Windows.Forms.Clipboard.GetImage(); // System.Drawing.Image
+                if (img is System.Drawing.Bitmap bmp)
+                {
+                    using var ms = new MemoryStream();
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return bitmap;
+                }
+            }
+
+            var dataObj = System.Windows.Forms.Clipboard.GetDataObject();
+            if (dataObj != null)
+            {
+                // Try CF_DIB via WinForms IDataObject
+                if (dataObj.GetDataPresent(System.Windows.Forms.DataFormats.Dib))
+                {
+                    var dib = dataObj.GetData(System.Windows.Forms.DataFormats.Dib);
+                    if (dib is MemoryStream ms)
+                    {
+                        var arr = ms.ToArray();
+                        var bs = ConvertDibToBitmapSource(arr);
+                        if (bs != null) return bs;
+                    }
+                    else if (dib is byte[] bArr)
+                    {
+                        var bs = ConvertDibToBitmapSource(bArr);
+                        if (bs != null) return bs;
+                    }
+                }
+
+                if (dataObj.GetDataPresent(System.Windows.Forms.DataFormats.Bitmap))
+                {
+                    var obj = dataObj.GetData(System.Windows.Forms.DataFormats.Bitmap);
+                    if (obj is System.Drawing.Bitmap db)
+                    {
+                        using var ms2 = new MemoryStream();
+                        db.Save(ms2, System.Drawing.Imaging.ImageFormat.Png);
+                        ms2.Seek(0, SeekOrigin.Begin);
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = ms2;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        return bitmap;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // 무시
         }
 
         return null;
