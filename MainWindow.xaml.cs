@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -43,7 +44,7 @@ public partial class MainWindow : Window
         contextMenu.Items.Add("설정", null, (s, e) => ShowSettings());
         contextMenu.Items.Add("도움말", null, (s, e) => ShowHelp());
         contextMenu.Items.Add("-");
-        contextMenu.Items.Add("종룼", null, (s, e) => WpfApplication.Current.Shutdown());
+        contextMenu.Items.Add("종료", null, (s, e) => WpfApplication.Current.Shutdown());
         _notifyIcon.ContextMenuStrip = contextMenu;
         
         _notifyIcon.DoubleClick += (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); };
@@ -65,12 +66,10 @@ public partial class MainWindow : Window
         {
             g.Clear(System.Drawing.Color.Transparent);
             
-            // 포스트잇 배경 (노란색)
             var rect = new System.Drawing.Rectangle(1, 1, 14, 14);
             g.FillRectangle(new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(255, 255, 153)), rect);
             g.DrawRectangle(new System.Drawing.Pen(System.Drawing.Color.FromArgb(200, 200, 100)), rect);
             
-            // 접힌 모서리
             var corner = new System.Drawing.Point[] {
                 new System.Drawing.Point(12, 1),
                 new System.Drawing.Point(15, 1),
@@ -79,7 +78,6 @@ public partial class MainWindow : Window
             g.FillPolygon(new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230, 230, 120)), corner);
             g.DrawPolygon(new System.Drawing.Pen(System.Drawing.Color.FromArgb(200, 200, 100)), corner);
             
-            // 텍스트 라인들
             var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(150, 150, 150));
             g.DrawLine(pen, 3, 5, 11, 5);
             g.DrawLine(pen, 3, 7, 10, 7);
@@ -163,37 +161,37 @@ public partial class MainWindow : Window
         };
 
         textBox.TextChanged += (s, e) => note.Content = textBox.Text;
-        textBox.KeyDown += (s, e) =>
-        {
-            if (e.Key == System.Windows.Input.Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
-            {
-                BitmapSource? image = null;
 
-                if (System.Windows.Clipboard.ContainsImage())
+        System.Windows.DataObject.AddPastingHandler(textBox, (s, pastingArgs) =>
+        {
+            BitmapSource? imageSource = null;
+
+            // 여러 형식에서 이미지 추출 시도
+            imageSource = ExtractBitmapSourceFromDataObject(pastingArgs.DataObject);
+
+            // IDataObject에서 못찾으면 클립보드에서 직접 시도 (PrintScreen 등에서 CF_DIB가 올 때 안전한 경로)
+            if (imageSource == null)
+            {
+                try
                 {
-                    image = System.Windows.Clipboard.GetImage();
-                }
-                else if (System.Windows.Clipboard.ContainsFileDropList())
-                {
-                    var files = System.Windows.Clipboard.GetFileDropList();
-                    foreach (var file in files)
+                    if (System.Windows.Clipboard.ContainsImage())
                     {
-                        if (File.Exists(file) && IsImageFile(file))
-                        {
-                            image = LoadImageFromFile(file);
-                            if (image != null) break;
-                        }
+                        imageSource = System.Windows.Clipboard.GetImage();
                     }
                 }
-
-                if (image != null)
+                catch
                 {
-                    note.ImageData = ConvertImageToBase64(image);
-                    RefreshNoteControl(note, noteControl);
-                    e.Handled = true;
+                    // 클립보드 접근 실패는 무시
                 }
             }
-        };
+
+            if (imageSource != null)
+            {
+                note.ImageData = ConvertImageToBase64(imageSource);
+                RefreshNoteControl(note, noteControl);
+                pastingArgs.CancelCommand();
+            }
+        });
 
         textBox.ContextMenu = CreateNoteContextMenu();
 
@@ -330,13 +328,10 @@ public partial class MainWindow : Window
         var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath());
         if (settingsWindow.ShowDialog() == true)
         {
-            // 현재 메모들 저장
             await _noteService.SaveNotesAsync(_notes.ToList());
             
-            // 새 경로 설정
             _noteService.SetDataPath(settingsWindow.SelectedPath);
             
-            // 기존 메모들 제거
             foreach (var control in _noteControls.ToList())
             {
                 NotesCanvas.Children.Remove(control);
@@ -344,7 +339,6 @@ public partial class MainWindow : Window
             _noteControls.Clear();
             _notes.Clear();
             
-            // 새 위치에서 메모들 로드
             var notes = await _noteService.LoadNotesAsync();
             foreach (var note in notes)
             {
@@ -387,6 +381,7 @@ public partial class MainWindow : Window
             bitmap.UriSource = new Uri(filePath);
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
+            bitmap.Freeze();
             return bitmap;
         }
         catch
@@ -394,4 +389,103 @@ public partial class MainWindow : Window
             return null;
         }
     }
+
+    // 새 헬퍼: IDataObject에서 가능한 이미지 타입들을 추출하여 BitmapSource로 반환
+    private BitmapSource? ExtractBitmapSourceFromDataObject(System.Windows.IDataObject dataObject)
+    {
+        if (dataObject == null) return null;
+
+        try
+        {
+            if (dataObject.GetDataPresent(System.Windows.DataFormats.Bitmap))
+            {
+                var obj = dataObject.GetData(System.Windows.DataFormats.Bitmap);
+                if (obj is BitmapSource bs)
+                {
+                    return bs;
+                }
+
+                if (obj is System.Drawing.Bitmap db)
+                {
+                    using var ms = new MemoryStream();
+                    try
+                    {
+                        db.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                        ms.Seek(0, SeekOrigin.Begin);
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = ms;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        return bitmap;
+                    }
+                    catch
+                    {
+                        // 변환 실패 시 계속 진행
+                    }
+                }
+
+                if (obj is MemoryStream msObj)
+                {
+                    try
+                    {
+                        msObj.Seek(0, SeekOrigin.Begin);
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = msObj;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        return bitmap;
+                    }
+                    catch
+                    {
+                        // 변환 실패 시 계속 진행
+                    }
+                }
+
+                if (obj is Stream s)
+                {
+                    try
+                    {
+                        s.Seek(0, SeekOrigin.Begin);
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = s;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        return bitmap;
+                    }
+                    catch
+                    {
+                        // 변환 실패 시 계속 진행
+                    }
+                }
+            }
+
+            if (dataObject.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            {
+                if (dataObject.GetData(System.Windows.DataFormats.FileDrop) is string[] files)
+                {
+                    var imageFile = files.FirstOrDefault(f => IsImageFile(f));
+                    if (imageFile != null)
+                    {
+                        return LoadImageFromFile(imageFile);
+                    }
+                }
+            }
+
+            // 그 외는 null 반환 (클립보드 직접 호출은 호출자에서 시도)
+        }
+        catch
+        {
+            // 예외는 흡수
+        }
+
+        return null;
+    }
+
 }
+
