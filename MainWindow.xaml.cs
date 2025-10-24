@@ -142,13 +142,59 @@ public partial class MainWindow : Window
             Width = 200,
             Height = 200,
             Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(note.Color)),
-            CornerRadius = new System.Windows.CornerRadius(5),
+            CornerRadius = new System.Windows.CornerRadius(6),
             BorderBrush = System.Windows.Media.Brushes.Gray,
             BorderThickness = new System.Windows.Thickness(1)
         };
 
-        var stackPanel = new System.Windows.Controls.StackPanel();
-        
+        // Root grid with a header ("창틀") and content area
+        var rootGrid = new System.Windows.Controls.Grid();
+        rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(24) });
+        rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+
+        // Header bar (title bar for the note)
+        var headerGrid = new System.Windows.Controls.Grid
+        {
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(60, 60, 60))
+        };
+        headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+        headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(24) });
+
+        var titleText = new System.Windows.Controls.TextBlock
+        {
+            Text = "메모",
+            Foreground = System.Windows.Media.Brushes.White,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Margin = new System.Windows.Thickness(6, 0, 0, 0),
+            FontSize = 12
+        };
+
+        var closeButton = new System.Windows.Controls.Button
+        {
+            Content = "×",
+            Width = 18,
+            Height = 18,
+            Margin = new System.Windows.Thickness(0, 3, 3, 3),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Padding = new System.Windows.Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand
+        };
+        System.Windows.Controls.Grid.SetColumn(closeButton, 1);
+        headerGrid.Children.Add(titleText);
+        headerGrid.Children.Add(closeButton);
+        System.Windows.Controls.Grid.SetRow(headerGrid, 0);
+
+        // Content area (image preview + textbox)
+        var contentPanel = new System.Windows.Controls.StackPanel();
+        System.Windows.Controls.Grid.SetRow(contentPanel, 1);
+
+        // 텍스트 영역 높이(이미지 유무에 따라 조정)
+        var textHeight = string.IsNullOrEmpty(note.ImageData) ? 170 : 80;
+
         var textBox = new System.Windows.Controls.TextBox
         {
             Text = note.Content,
@@ -156,23 +202,22 @@ public partial class MainWindow : Window
             BorderThickness = new System.Windows.Thickness(0),
             TextWrapping = System.Windows.TextWrapping.Wrap,
             AcceptsReturn = true,
-            Margin = new System.Windows.Thickness(5),
-            Height = string.IsNullOrEmpty(note.ImageData) ? 170 : 80
+            Margin = new System.Windows.Thickness(5, 2, 5, 5),
+            Height = textHeight,
+            VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto
         };
 
         textBox.TextChanged += (s, e) => note.Content = textBox.Text;
 
+        // 이미지 붙여넣기 핸들링은 기존 로직 유지
         System.Windows.DataObject.AddPastingHandler(textBox, (s, pastingArgs) =>
         {
             BitmapSource? imageSource = null;
 
-            // 여러 형식에서 이미지 추출 시도
             imageSource = ExtractBitmapSourceFromDataObject(pastingArgs.DataObject);
 
-            // 로그 남김
             try { LogClipboardFormats(pastingArgs.DataObject, note.Id ?? note.GetHashCode().ToString()); } catch { }
 
-            // IDataObject에서 못찾으면 클립보드에서 직접 시도 (PrintScreen 등에서 CF_DIB가 올 때 안전한 경로)
             if (imageSource == null)
             {
                 try
@@ -182,22 +227,12 @@ public partial class MainWindow : Window
                         imageSource = System.Windows.Clipboard.GetImage();
                     }
                 }
-                catch
-                {
-                    // 클립보드 접근 실패는 무시
-                }
+                catch { }
             }
 
-            // WinForms 경로로도 시도
             if (imageSource == null)
             {
-                try
-                {
-                    imageSource = ExtractFromWinFormsClipboard();
-                }
-                catch
-                {
-                }
+                try { imageSource = ExtractFromWinFormsClipboard(); } catch { }
             }
 
             if (imageSource != null)
@@ -208,7 +243,6 @@ public partial class MainWindow : Window
             }
         });
 
-        // Ctrl+V가 AddPastingHandler로 잡히지 않는 경우를 보완: PreviewKeyDown에서 직접 처리
         textBox.PreviewKeyDown += (s, ke) =>
         {
             if (ke.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
@@ -227,10 +261,7 @@ public partial class MainWindow : Window
                         imageSource = System.Windows.Clipboard.GetImage();
                     }
                 }
-                catch
-                {
-                    // 클립보드 접근 실패 무시
-                }
+                catch { }
 
                 if (imageSource != null)
                 {
@@ -241,7 +272,6 @@ public partial class MainWindow : Window
             }
         };
 
-        // Paste 명령(키/메뉴)을 확실히 가로채서 이미지 붙여넣기를 시도
         textBox.CommandBindings.Add(new System.Windows.Input.CommandBinding(System.Windows.Input.ApplicationCommands.Paste, (s, e) =>
         {
             BitmapSource? imageSource = null;
@@ -253,29 +283,17 @@ public partial class MainWindow : Window
                 {
                     imageSource = ExtractBitmapSourceFromDataObject(dataObj);
                 }
-
-                // 로그 남김
                 try { LogClipboardFormats(dataObj, note.Id ?? note.GetHashCode().ToString()); } catch { }
-
                 if (imageSource == null && System.Windows.Clipboard.ContainsImage())
                 {
                     imageSource = System.Windows.Clipboard.GetImage();
                 }
             }
-            catch
-            {
-                // 클립보드 접근 실패 무시
-            }
+            catch { }
 
             if (imageSource == null)
             {
-                try
-                {
-                    imageSource = ExtractFromWinFormsClipboard();
-                }
-                catch
-                {
-                }
+                try { imageSource = ExtractFromWinFormsClipboard(); } catch { }
             }
 
             if (imageSource != null)
@@ -288,63 +306,53 @@ public partial class MainWindow : Window
 
         textBox.ContextMenu = CreateNoteContextMenu();
 
-        stackPanel.Children.Add(textBox);
-
+        // 이미지가 있으면 이미지 미리보기, 이후 텍스트 박스
         if (!string.IsNullOrEmpty(note.ImageData))
         {
             var imageControl = CreateImageControl(note.ImageData);
-            stackPanel.Children.Add(imageControl);
+            contentPanel.Children.Add(imageControl);
         }
+        contentPanel.Children.Add(textBox);
 
-        var deleteButton = new System.Windows.Controls.Button
-        {
-            Content = "X",
-            Width = 20,
-            Height = 20,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
-            VerticalAlignment = System.Windows.VerticalAlignment.Top,
-            Margin = new System.Windows.Thickness(0, 2, 2, 0),
-            Background = System.Windows.Media.Brushes.Red,
-            Foreground = System.Windows.Media.Brushes.White
-        };
-
-        deleteButton.Click += (s, e) =>
+        // Close button removes the note
+        closeButton.Click += (s, e) =>
         {
             _notes.Remove(note);
             NotesCanvas.Children.Remove(noteControl);
             _noteControls.Remove(noteControl);
         };
 
-        var grid = new System.Windows.Controls.Grid();
-        grid.Children.Add(stackPanel);
-        grid.Children.Add(deleteButton);
-        noteControl.Child = grid;
-
-        System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
-        System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
-
-        noteControl.MouseLeftButtonDown += (s, e) =>
+        // Header drag (drag only by header, with offset so it feels like a title bar)
+        System.Windows.Point clickOffset = new System.Windows.Point(0, 0);
+        headerGrid.MouseLeftButtonDown += (s, e) =>
         {
-            noteControl.CaptureMouse();
+            headerGrid.CaptureMouse();
+            clickOffset = e.GetPosition(noteControl);
             e.Handled = true;
         };
-
-        noteControl.MouseMove += (s, e) =>
+        headerGrid.MouseMove += (s, e) =>
         {
-            if (noteControl.IsMouseCaptured && e.LeftButton == MouseButtonState.Pressed)
+            if (headerGrid.IsMouseCaptured && e.LeftButton == MouseButtonState.Pressed)
             {
-                var position = e.GetPosition(NotesCanvas);
-                note.Left = position.X;
-                note.Top = position.Y;
+                var pos = e.GetPosition(NotesCanvas);
+                note.Left = pos.X - clickOffset.X;
+                note.Top = pos.Y - clickOffset.Y;
                 System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
                 System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
             }
         };
-
-        noteControl.MouseLeftButtonUp += (s, e) =>
+        headerGrid.MouseLeftButtonUp += (s, e) =>
         {
-            noteControl.ReleaseMouseCapture();
+            headerGrid.ReleaseMouseCapture();
         };
+
+        // Assemble
+        rootGrid.Children.Add(headerGrid);
+        rootGrid.Children.Add(contentPanel);
+        noteControl.Child = rootGrid;
+
+        System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
+        System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
 
         NotesCanvas.Children.Add(noteControl);
         _noteControls.Add(noteControl);

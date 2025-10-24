@@ -1,0 +1,77 @@
+Index: .idea/indexLayout.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/indexLayout.xml b/.idea/indexLayout.xml
+new file mode 100644
+--- /dev/null	(date 1761293183904)
++++ b/.idea/indexLayout.xml	(date 1761293183904)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="UserContentModel">
++    <attachedFolders />
++    <explicitIncludes />
++    <explicitExcludes />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1761293185229)
++++ b/.idea/vcs.xml	(date 1761293185229)
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="" vcs="Git" />
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/.gitignore b/.idea/.gitignore
+new file mode 100644
+--- /dev/null	(date 1761293189053)
++++ b/.idea/.gitignore	(date 1761293189053)
+@@ -0,0 +1,13 @@
++# 디폴트 무시된 파일
++/shelf/
++/workspace.xml
++# Rider에서 무시된 파일
++/modules.xml
++/.idea.JISMemo.iml
++/projectSettingsUpdater.xml
++/contentModel.xml
++# 에디터 기반 HTTP 클라이언트 요청
++/httpRequests/
++# Datasource local storage ignored files
++/dataSources/
++/dataSources.local.xml
+Index: .idea/.idea.JISMemo/.idea/junie.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/.idea.JISMemo/.idea/junie.xml b/.idea/.idea.JISMemo/.idea/junie.xml
+new file mode 100644
+--- /dev/null	(date 1761290298496)
++++ b/.idea/.idea.JISMemo/.idea/junie.xml	(date 1761290298496)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="JunieProject">
++    <option name="questionFrequencyLevel" value="NeverAsk" />
++  </component>
++</project>
+\ No newline at end of file

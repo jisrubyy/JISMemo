@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JISMemo"
         mc:Ignorable="d"
-        Title="JISMemo" Height="600" Width="800" Background="Transparent" AllowsTransparency="True" WindowStyle="None" WindowStartupLocation="CenterScreen">
+        Title="JISMemo" Height="600" Width="800" WindowStartupLocation="CenterScreen">
     <Canvas x:Name="NotesCanvas" Background="#01000000">
         <Border x:Name="TitleBar" Background="#333" Height="40" Canvas.Left="0" Canvas.Top="0" Width="800" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <StackPanel Orientation="Horizontal" Margin="10,5">
