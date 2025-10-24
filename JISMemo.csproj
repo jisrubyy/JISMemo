@@ -7,6 +7,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <AssemblyTitle>JISMemo</AssemblyTitle>
+        <AssemblyDescription>포스트잇 스타일 메모 애플리케이션</AssemblyDescription>
+        <AssemblyCompany>JIS</AssemblyCompany>
+        <AssemblyProduct>JISMemo</AssemblyProduct>
+        <AssemblyVersion>1.0.1.0</AssemblyVersion>
+        <FileVersion>1.0.1.0</FileVersion>
     </PropertyGroup>
 
 </Project>

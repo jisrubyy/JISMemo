@@ -35,13 +35,15 @@ public partial class MainWindow : Window
         {
             Icon = CreateStickyNoteIcon(),
             Visible = true,
-            Text = "JISMemo - 더블클릭으로 열기"
+            Text = $"{AppInfo.AppName} v{AppInfo.Version} - 더블클릭으로 열기"
         };
         
         var contextMenu = new ContextMenuStrip();
         contextMenu.Items.Add("열기", null, (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); });
+        contextMenu.Items.Add("설정", null, (s, e) => ShowSettings());
+        contextMenu.Items.Add("도움말", null, (s, e) => ShowHelp());
         contextMenu.Items.Add("-");
-        contextMenu.Items.Add("종료", null, (s, e) => WpfApplication.Current.Shutdown());
+        contextMenu.Items.Add("종룼", null, (s, e) => WpfApplication.Current.Shutdown());
         _notifyIcon.ContextMenuStrip = contextMenu;
         
         _notifyIcon.DoubleClick += (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); };
@@ -94,7 +96,7 @@ public partial class MainWindow : Window
         if (WindowState == WindowState.Minimized)
         {
             Hide();
-            _notifyIcon!.ShowBalloonTip(2000, "JISMemo", "시스템 트레이로 최소화되었습니다.", System.Windows.Forms.ToolTipIcon.Info);
+            _notifyIcon!.ShowBalloonTip(2000, $"{AppInfo.AppName} v{AppInfo.Version}", "시스템 트레이로 최소화되었습니다.", System.Windows.Forms.ToolTipIcon.Info);
         }
     }
 
@@ -174,6 +176,8 @@ public partial class MainWindow : Window
                 }
             }
         };
+
+        textBox.ContextMenu = CreateNoteContextMenu();
 
         stackPanel.Children.Add(textBox);
 
@@ -274,6 +278,74 @@ public partial class MainWindow : Window
         NotesCanvas.Children.Remove(noteControl);
         _noteControls.Remove(noteControl);
         CreateNoteControl(note);
+    }
+
+    private System.Windows.Controls.ContextMenu CreateNoteContextMenu()
+    {
+        var contextMenu = new System.Windows.Controls.ContextMenu();
+        
+        var settingsMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "설정"
+        };
+        settingsMenuItem.Click += (s, e) => ShowSettings();
+        
+        var helpMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "도움말"
+        };
+        helpMenuItem.Click += (s, e) => ShowHelp();
+        
+        contextMenu.Items.Add(settingsMenuItem);
+        contextMenu.Items.Add(helpMenuItem);
+        return contextMenu;
+    }
+
+    private void ShowHelp()
+    {
+        var helpWindow = new HelpWindow();
+        helpWindow.ShowDialog();
+    }
+
+    private async void ShowSettings()
+    {
+        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath());
+        if (settingsWindow.ShowDialog() == true)
+        {
+            // 현재 메모들 저장
+            await _noteService.SaveNotesAsync(_notes.ToList());
+            
+            // 새 경로 설정
+            _noteService.SetDataPath(settingsWindow.SelectedPath);
+            
+            // 기존 메모들 제거
+            foreach (var control in _noteControls.ToList())
+            {
+                NotesCanvas.Children.Remove(control);
+            }
+            _noteControls.Clear();
+            _notes.Clear();
+            
+            // 새 위치에서 메모들 로드
+            var notes = await _noteService.LoadNotesAsync();
+            foreach (var note in notes)
+            {
+                _notes.Add(note);
+                CreateNoteControl(note);
+            }
+            
+            System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowSettings();
+    }
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowHelp();
     }
 
     protected override void OnClosed(EventArgs e)

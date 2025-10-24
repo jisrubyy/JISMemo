@@ -1,0 +1,56 @@
+<Window x:Class="JISMemo.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="JISMemo 도움말" Height="500" Width="600" 
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="JISMemo 도움말" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+            
+            <TextBlock Text="기본 사용법" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • '+ 새 메모' 버튼을 클릭하여 새로운 메모를 생성합니다.<LineBreak/>
+                • 메모를 드래그하여 원하는 위치로 이동할 수 있습니다.<LineBreak/>
+                • 메모의 'X' 버튼을 클릭하여 삭제할 수 있습니다.<LineBreak/>
+                • '최소화' 버튼으로 시스템 트레이로 최소화됩니다.
+            </TextBlock>
+            
+            <TextBlock Text="이미지 붙여넣기" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • 스크린샷을 캡처하거나 이미지를 복사합니다 (Ctrl+C)<LineBreak/>
+                • 메모의 텍스트 영역을 클릭합니다<LineBreak/>
+                • Ctrl+V를 눌러 이미지를 붙여넣습니다<LineBreak/>
+                • 이미지는 자동으로 크기가 조정되어 표시됩니다
+            </TextBlock>
+            
+            <TextBlock Text="시스템 트레이" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • 최소화하면 시스템 트레이에 포스트잇 아이콘이 나타납니다<LineBreak/>
+                • 트레이 아이콘을 좌클릭 또는 더블클릭하여 창을 복원합니다<LineBreak/>
+                • 트레이 아이콘을 우클릭하면 메뉴가 나타납니다
+            </TextBlock>
+            
+            <TextBlock Text="데이터 저장" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • 모든 메모는 자동으로 저장됩니다<LineBreak/>
+                • PC를 재부팅해도 메모 내용과 위치가 유지됩니다<LineBreak/>
+                • 이미지도 함께 저장되어 복원됩니다
+            </TextBlock>
+            
+            <TextBlock Text="단축키" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • Ctrl+V: 클립보드 이미지 붙여넣기<LineBreak/>
+                • 우클릭: 메모 컨텍스트 메뉴 (도움말 포함)
+            </TextBlock>
+            
+            <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,20,0,0">
+                <StackPanel>
+                    <TextBlock Text="프로그램 정보" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <TextBlock Text="{Binding VersionInfo}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+            
+            <Button Content="확인" Width="80" Height="30" Margin="0,20,0,0" Click="OkButton_Click"/>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

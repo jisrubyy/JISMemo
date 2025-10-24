@@ -1,12 +1,73 @@
 using System.IO;
 using System.Text.Json;
 using JISMemo.Models;
+using Microsoft.Win32;
 
 namespace JISMemo.Services;
 
 public class NoteService
 {
-    private readonly string _dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JISMemo", "notes.json");
+    private string _dataPath;
+    private const string RegistryKey = @"SOFTWARE\JISMemo";
+    private const string DataPathValue = "DataPath";
+
+    public NoteService()
+    {
+        _dataPath = GetDataPath();
+    }
+
+    private string GetDataPath()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RegistryKey);
+            var customPath = key?.GetValue(DataPathValue) as string;
+            
+            if (!string.IsNullOrEmpty(customPath) && Directory.Exists(Path.GetDirectoryName(customPath)))
+            {
+                return customPath;
+            }
+        }
+        catch { }
+        
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JISMemo", "notes.json");
+    }
+
+    public void SetDataPath(string? customPath)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(RegistryKey);
+            
+            if (string.IsNullOrEmpty(customPath))
+            {
+                key.DeleteValue(DataPathValue, false);
+                _dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JISMemo", "notes.json");
+            }
+            else
+            {
+                var fullPath = Path.Combine(customPath, "notes.json");
+                key.SetValue(DataPathValue, fullPath);
+                _dataPath = fullPath;
+            }
+        }
+        catch { }
+    }
+
+    public string GetCurrentDataPath() => _dataPath;
+    
+    public bool IsUsingCustomPath()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RegistryKey);
+            return key?.GetValue(DataPathValue) != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     public async Task<List<StickyNote>> LoadNotesAsync()
     {
