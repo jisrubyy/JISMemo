@@ -204,6 +204,7 @@ public partial class MainWindow : Window
         };
         headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
         headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(24) });
+        headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(24) });
 
         var titleText = new System.Windows.Controls.TextBlock
         {
@@ -213,6 +214,23 @@ public partial class MainWindow : Window
             Margin = new System.Windows.Thickness(6, 0, 0, 0),
             FontSize = 12
         };
+
+        var infoButton = new System.Windows.Controls.Button
+        {
+            Content = "ℹ",
+            Width = 18,
+            Height = 18,
+            Margin = new System.Windows.Thickness(0, 3, 3, 3),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = System.Windows.Media.Brushes.White,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Padding = new System.Windows.Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            FontSize = 14
+        };
+        System.Windows.Controls.Grid.SetColumn(infoButton, 1);
 
         var closeButton = new System.Windows.Controls.Button
         {
@@ -228,10 +246,18 @@ public partial class MainWindow : Window
             Padding = new System.Windows.Thickness(0),
             Cursor = System.Windows.Input.Cursors.Hand
         };
-        System.Windows.Controls.Grid.SetColumn(closeButton, 1);
+        System.Windows.Controls.Grid.SetColumn(closeButton, 2);
         headerGrid.Children.Add(titleText);
+        headerGrid.Children.Add(infoButton);
         headerGrid.Children.Add(closeButton);
         System.Windows.Controls.Grid.SetRow(headerGrid, 0);
+
+        // Info button shows note information
+        infoButton.Click += (s, e) =>
+        {
+            var infoWindow = new NoteInfoWindow(note);
+            infoWindow.ShowDialog();
+        };
 
         // Content area (image preview + textbox)
         var contentPanel = new System.Windows.Controls.StackPanel();
