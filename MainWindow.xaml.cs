@@ -19,7 +19,9 @@ public partial class MainWindow : Window
     private readonly NoteService _noteService = new();
     private readonly ObservableCollection<StickyNote> _notes = new();
     private readonly List<System.Windows.Controls.Border> _noteControls = new();
+    private readonly Dictionary<StickyNote, System.Windows.Shapes.Rectangle> _minimapRects = new();
     private NotifyIcon? _notifyIcon;
+    private string? _currentPassword;
 
     public MainWindow()
     {
@@ -110,17 +112,59 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        var notes = await _noteService.LoadNotesAsync();
+        // 암호화가 활성화되어 있으면 비밀번호 입력 요청
+        if (_noteService.IsEncryptionEnabled())
+        {
+            var hint = _noteService.GetPasswordHint();
+            var passwordWindow = new PasswordWindow(hint);
+            
+            while (true)
+            {
+                if (passwordWindow.ShowDialog() != true)
+                {
+                    WpfApplication.Current.Shutdown();
+                    return;
+                }
+                
+                if (_noteService.VerifyPassword(passwordWindow.Password))
+                {
+                    _currentPassword = passwordWindow.Password;
+                    break;
+                }
+                
+                System.Windows.MessageBox.Show("비밀번호가 올바르지 않습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                passwordWindow = new PasswordWindow(hint);
+            }
+        }
+        else
+        {
+            // 첫 실행 시 비밀번호 설정 여부 확인
+            var result = System.Windows.MessageBox.Show("메모를 암호화하시겠습니까?\n(나중에 설정에서 변경 가능)", "암호화 설정", 
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                var setupWindow = new PasswordSetupWindow();
+                if (setupWindow.ShowDialog() == true)
+                {
+                    _noteService.SetupPassword(setupWindow.Password, setupWindow.Hint);
+                    _currentPassword = setupWindow.Password;
+                }
+            }
+        }
+        
+        var notes = await _noteService.LoadNotesAsync(_currentPassword);
         foreach (var note in notes)
         {
             _notes.Add(note);
             CreateNoteControl(note);
         }
+        UpdateMinimap();
     }
 
     private async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        await _noteService.SaveNotesAsync(_notes.ToList());
+        await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
     }
 
     private void AddNoteButton_Click(object sender, RoutedEventArgs e)
@@ -133,14 +177,15 @@ public partial class MainWindow : Window
         };
         _notes.Add(note);
         CreateNoteControl(note);
+        UpdateMinimap();
     }
 
     private void CreateNoteControl(StickyNote note)
     {
         var noteControl = new System.Windows.Controls.Border
         {
-            Width = 200,
-            Height = 200,
+            Width = note.Width,
+            Height = note.Height,
             Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(note.Color)),
             CornerRadius = new System.Windows.CornerRadius(6),
             BorderBrush = System.Windows.Media.Brushes.Gray,
@@ -338,6 +383,12 @@ public partial class MainWindow : Window
             _notes.Remove(note);
             NotesCanvas.Children.Remove(noteControl);
             _noteControls.Remove(noteControl);
+            if (_minimapRects.TryGetValue(note, out var rect))
+            {
+                MinimapCanvas.Children.Remove(rect);
+                _minimapRects.Remove(note);
+            }
+            UpdateMinimap();
         };
 
         // Header drag (drag only by header, with offset so it feels like a title bar)
@@ -357,6 +408,7 @@ public partial class MainWindow : Window
                 note.Top = pos.Y - clickOffset.Y;
                 System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
                 System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
+                UpdateMinimapRect(note);
             }
         };
         headerGrid.MouseLeftButtonUp += (s, e) =>
@@ -364,9 +416,49 @@ public partial class MainWindow : Window
             headerGrid.ReleaseMouseCapture();
         };
 
+        // 크기 조절 핸들 (우측 하단)
+        var resizeHandle = new System.Windows.Controls.Border
+        {
+            Width = 12,
+            Height = 12,
+            Background = System.Windows.Media.Brushes.DarkGray,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
+            Cursor = System.Windows.Input.Cursors.SizeNWSE,
+            Margin = new System.Windows.Thickness(0, 0, 2, 2)
+        };
+        System.Windows.Controls.Grid.SetRowSpan(resizeHandle, 2);
+
+        System.Windows.Point resizeStart = new System.Windows.Point();
+        double startWidth = 0, startHeight = 0;
+        resizeHandle.MouseLeftButtonDown += (s, e) =>
+        {
+            resizeHandle.CaptureMouse();
+            resizeStart = e.GetPosition(NotesCanvas);
+            startWidth = noteControl.Width;
+            startHeight = noteControl.Height;
+            e.Handled = true;
+        };
+        resizeHandle.MouseMove += (s, e) =>
+        {
+            if (resizeHandle.IsMouseCaptured)
+            {
+                var pos = e.GetPosition(NotesCanvas);
+                var newWidth = startWidth + (pos.X - resizeStart.X);
+                var newHeight = startHeight + (pos.Y - resizeStart.Y);
+                if (newWidth > 150) { noteControl.Width = newWidth; note.Width = newWidth; }
+                if (newHeight > 100) { noteControl.Height = newHeight; note.Height = newHeight; }
+            }
+        };
+        resizeHandle.MouseLeftButtonUp += (s, e) =>
+        {
+            resizeHandle.ReleaseMouseCapture();
+        };
+
         // Assemble
         rootGrid.Children.Add(headerGrid);
         rootGrid.Children.Add(contentPanel);
+        rootGrid.Children.Add(resizeHandle);
         noteControl.Child = rootGrid;
 
         System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
@@ -447,7 +539,7 @@ public partial class MainWindow : Window
         var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath());
         if (settingsWindow.ShowDialog() == true)
         {
-            await _noteService.SaveNotesAsync(_notes.ToList());
+            await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
             
             _noteService.SetDataPath(settingsWindow.SelectedPath);
             
@@ -458,7 +550,7 @@ public partial class MainWindow : Window
             _noteControls.Clear();
             _notes.Clear();
             
-            var notes = await _noteService.LoadNotesAsync();
+            var notes = await _noteService.LoadNotesAsync(_currentPassword);
             foreach (var note in notes)
             {
                 _notes.Add(note);
@@ -794,6 +886,90 @@ public partial class MainWindow : Window
         }
 
         return null;
+    }
+
+    private void UpdateMinimap()
+    {
+        const double scale = 200.0 / 3000.0;
+        MinimapCanvas.Children.Clear();
+        _minimapRects.Clear();
+
+        foreach (var note in _notes)
+        {
+            var rect = new System.Windows.Shapes.Rectangle
+            {
+                Width = note.Width * scale,
+                Height = note.Height * scale,
+                Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(note.Color)),
+                Stroke = System.Windows.Media.Brushes.Gray,
+                StrokeThickness = 0.5
+            };
+            System.Windows.Controls.Canvas.SetLeft(rect, note.Left * scale);
+            System.Windows.Controls.Canvas.SetTop(rect, note.Top * scale);
+            MinimapCanvas.Children.Add(rect);
+            _minimapRects[note] = rect;
+        }
+
+        MinimapCanvas.Children.Add(ViewportRect);
+        UpdateViewportRect();
+    }
+
+    private void UpdateMinimapRect(StickyNote note)
+    {
+        if (_minimapRects.TryGetValue(note, out var rect))
+        {
+            const double scale = 200.0 / 3000.0;
+            System.Windows.Controls.Canvas.SetLeft(rect, note.Left * scale);
+            System.Windows.Controls.Canvas.SetTop(rect, note.Top * scale);
+        }
+    }
+
+    private void UpdateViewportRect()
+    {
+        const double scale = 200.0 / 3000.0;
+        var x = MainScrollViewer.HorizontalOffset * scale;
+        var y = MainScrollViewer.VerticalOffset * scale;
+        var w = MainScrollViewer.ViewportWidth * scale;
+        var h = MainScrollViewer.ViewportHeight * scale;
+
+        System.Windows.Controls.Canvas.SetLeft(ViewportRect, x);
+        System.Windows.Controls.Canvas.SetTop(ViewportRect, y);
+        ViewportRect.Width = w;
+        ViewportRect.Height = h;
+    }
+
+    private void MainScrollViewer_ScrollChanged(object sender, System.Windows.Controls.ScrollChangedEventArgs e)
+    {
+        UpdateViewportRect();
+    }
+
+    private void MinimapCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        MinimapCanvas.CaptureMouse();
+        ScrollToMinimapPosition(e.GetPosition(MinimapCanvas));
+        e.Handled = true;
+    }
+
+    private void ScrollToMinimapPosition(System.Windows.Point pos)
+    {
+        const double scale = 3000.0 / 200.0;
+        var targetX = pos.X * scale - MainScrollViewer.ViewportWidth / 2;
+        var targetY = pos.Y * scale - MainScrollViewer.ViewportHeight / 2;
+        MainScrollViewer.ScrollToHorizontalOffset(Math.Max(0, targetX));
+        MainScrollViewer.ScrollToVerticalOffset(Math.Max(0, targetY));
+    }
+
+    private void MinimapCanvas_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (MinimapCanvas.IsMouseCaptured && e.LeftButton == MouseButtonState.Pressed)
+        {
+            ScrollToMinimapPosition(e.GetPosition(MinimapCanvas));
+        }
+    }
+
+    private void MinimapCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        MinimapCanvas.ReleaseMouseCapture();
     }
 
 }

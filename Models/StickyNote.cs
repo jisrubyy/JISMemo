@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace JISMemo.Models;
 
-public class StickyNote : INotifyPropertyChanged
+public sealed class StickyNote : INotifyPropertyChanged
 {
     private string _content = "";
     private double _left;
@@ -10,8 +10,12 @@ public class StickyNote : INotifyPropertyChanged
     private string _color = "#FFFF99";
     private string? _imageData;
     private double _fontSize = 14.0; // 메모 텍스트 확대/축소(줌) 값
+    private double _width = 200;
+    private double _height = 200;
 
     public string Id { get; set; } = Guid.NewGuid().ToString();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime ModifiedAt { get; set; } = DateTime.Now;
     
     public string Content
     {
@@ -19,6 +23,7 @@ public class StickyNote : INotifyPropertyChanged
         set
         {
             _content = value;
+            ModifiedAt = DateTime.Now;
             OnPropertyChanged(nameof(Content));
         }
     }
@@ -76,9 +81,29 @@ public class StickyNote : INotifyPropertyChanged
         }
     }
 
+    public double Width
+    {
+        get => _width;
+        set
+        {
+            _width = value;
+            OnPropertyChanged(nameof(Width));
+        }
+    }
+
+    public double Height
+    {
+        get => _height;
+        set
+        {
+            _height = value;
+            OnPropertyChanged(nameof(Height));
+        }
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

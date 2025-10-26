@@ -13,8 +13,8 @@
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <!-- Disable R2R to avoid potential startup issues on some machines -->
         <PublishReadyToRun>false</PublishReadyToRun>
-        <!-- Ensure culture/resource folders are not emitted; prefer invariant globalization for single-file -->
-        <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- Enable globalization support for Korean input -->
+        <InvariantGlobalization>false</InvariantGlobalization>
         <!-- Compress contents inside the single-file executable -->
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
         <!-- Avoid trimming to keep WPF reflection-based components intact -->
