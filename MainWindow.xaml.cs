@@ -16,20 +16,50 @@ namespace JISMemo;
 
 public partial class MainWindow : Window
 {
-    private readonly NoteService _noteService = new();
+    private NoteService _noteService;
     private readonly ObservableCollection<StickyNote> _notes = new();
     private readonly List<System.Windows.Controls.Border> _noteControls = new();
     private readonly Dictionary<StickyNote, System.Windows.Shapes.Rectangle> _minimapRects = new();
     private NotifyIcon? _notifyIcon;
     private string? _currentPassword;
+    private string _currentUser = "";
 
     public MainWindow()
     {
         InitializeComponent();
+        
+        // 사용자 선택
+        var userService = new UserService();
+        var currentUser = userService.GetCurrentUser();
+        
+        if (string.IsNullOrEmpty(currentUser) || userService.GetAllUsers().Count == 0)
+        {
+            var userSelection = new UserSelectionWindow();
+            if (userSelection.ShowDialog() != true || string.IsNullOrEmpty(userSelection.SelectedUser))
+            {
+                WpfApplication.Current.Shutdown();
+                return;
+            }
+            _currentUser = userSelection.SelectedUser;
+            userService.SetCurrentUser(_currentUser);
+        }
+        else
+        {
+            _currentUser = currentUser;
+        }
+        
+        _noteService = new NoteService(_currentUser);
+        
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
         InitializeSystemTray();
+        UpdateCurrentUserDisplay();
+    }
+    
+    private void UpdateCurrentUserDisplay()
+    {
+        CurrentUserText.Text = $"사용자: {_currentUser}";
     }
 
     private void InitializeSystemTray()
@@ -43,6 +73,7 @@ public partial class MainWindow : Window
         
         var contextMenu = new ContextMenuStrip();
         contextMenu.Items.Add("열기", null, (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); });
+        contextMenu.Items.Add("사용자 전환", null, (s, e) => SwitchUser());
         contextMenu.Items.Add("설정", null, (s, e) => ShowSettings());
         contextMenu.Items.Add("도움말", null, (s, e) => ShowHelp());
         contextMenu.Items.Add("-");
@@ -173,7 +204,8 @@ public partial class MainWindow : Window
         {
             Left = 200 + _notes.Count * 20,
             Top = 80 + _notes.Count * 20,
-            Content = "새 메모"
+            Content = "새 메모",
+            Owner = _currentUser
         };
         _notes.Add(note);
         CreateNoteControl(note);
@@ -537,6 +569,12 @@ public partial class MainWindow : Window
     {
         var contextMenu = new System.Windows.Controls.ContextMenu();
         
+        var switchUserMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "사용자 전환"
+        };
+        switchUserMenuItem.Click += (s, e) => SwitchUser();
+        
         var settingsMenuItem = new System.Windows.Controls.MenuItem
         {
             Header = "설정"
@@ -549,9 +587,66 @@ public partial class MainWindow : Window
         };
         helpMenuItem.Click += (s, e) => ShowHelp();
         
+        contextMenu.Items.Add(switchUserMenuItem);
         contextMenu.Items.Add(settingsMenuItem);
         contextMenu.Items.Add(helpMenuItem);
         return contextMenu;
+    }
+    
+    private async void SwitchUser()
+    {
+        await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+        
+        var userSelection = new UserSelectionWindow();
+        if (userSelection.ShowDialog() == true && !string.IsNullOrEmpty(userSelection.SelectedUser))
+        {
+            _currentUser = userSelection.SelectedUser;
+            var userService = new UserService();
+            userService.SetCurrentUser(_currentUser);
+            
+            _noteService = new NoteService(_currentUser);
+            _currentPassword = null;
+            
+            foreach (var control in _noteControls.ToList())
+            {
+                NotesCanvas.Children.Remove(control);
+            }
+            _noteControls.Clear();
+            _notes.Clear();
+            _minimapRects.Clear();
+            
+            if (_noteService.IsEncryptionEnabled())
+            {
+                var hint = _noteService.GetPasswordHint();
+                var passwordWindow = new PasswordWindow(hint);
+                
+                while (true)
+                {
+                    if (passwordWindow.ShowDialog() != true)
+                    {
+                        return;
+                    }
+                    
+                    if (_noteService.VerifyPassword(passwordWindow.Password))
+                    {
+                        _currentPassword = passwordWindow.Password;
+                        break;
+                    }
+                    
+                    System.Windows.MessageBox.Show("비밀번호가 올바르지 않습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    passwordWindow = new PasswordWindow(hint);
+                }
+            }
+            
+            var notes = await _noteService.LoadNotesAsync(_currentPassword);
+            foreach (var note in notes)
+            {
+                _notes.Add(note);
+                CreateNoteControl(note);
+            }
+            UpdateMinimap();
+            UpdateCurrentUserDisplay();
+        }
     }
 
     private void ShowHelp()
@@ -604,6 +699,11 @@ public partial class MainWindow : Window
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
         ShowHelp();
+    }
+    
+    private void SwitchUserButton_Click(object sender, RoutedEventArgs e)
+    {
+        SwitchUser();
     }
 
     protected override void OnClosed(EventArgs e)

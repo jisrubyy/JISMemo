@@ -16,6 +16,7 @@ public sealed class StickyNote : INotifyPropertyChanged
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime ModifiedAt { get; set; } = DateTime.Now;
+    public string? Owner { get; set; }
     
     public string Content
     {

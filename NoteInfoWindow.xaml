@@ -16,6 +16,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="메모 정보" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
@@ -35,6 +36,9 @@
         <TextBlock Grid.Row="9" Text="위치:" FontWeight="Bold" Margin="0,0,0,5"/>
         <TextBlock Grid.Row="10" x:Name="PositionText" Margin="0,0,0,10"/>
         
-        <Button Grid.Row="11" Content="확인" Width="80" Height="30" HorizontalAlignment="Right" Click="OkButton_Click" IsDefault="True"/>
+        <TextBlock Grid.Row="11" Text="소유자:" FontWeight="Bold" Margin="0,0,0,5"/>
+        <TextBlock Grid.Row="12" x:Name="OwnerText" Margin="0,0,0,10"/>
+        
+        <Button Grid.Row="13" Content="확인" Width="80" Height="30" HorizontalAlignment="Right" Click="OkButton_Click" IsDefault="True"/>
     </Grid>
 </Window>

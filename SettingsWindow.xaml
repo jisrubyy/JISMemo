@@ -35,11 +35,23 @@
                 </GroupBox>
                 
                 <GroupBox Header="암호 관리" Margin="0,0,0,10">
-            <StackPanel Margin="10">
-                <TextBlock x:Name="EncryptionStatusText" Text="암호화 상태: 비활성화" Margin="0,5"/>
-                <Button x:Name="RemovePasswordButton" Content="암호 제거" Width="100" Height="30" 
-                      Margin="0,10,0,0" HorizontalAlignment="Left" Click="RemovePasswordButton_Click"/>
-                </StackPanel>
+                    <StackPanel Margin="10">
+                        <TextBlock x:Name="EncryptionStatusText" Text="암호화 상태: 비활성화" Margin="0,5"/>
+                        <Button x:Name="RemovePasswordButton" Content="암호 제거" Width="100" Height="30" 
+                              Margin="0,10,0,0" HorizontalAlignment="Left" Click="RemovePasswordButton_Click"/>
+                    </StackPanel>
+                </GroupBox>
+                
+                <GroupBox Header="데이터 백업/복원" Margin="0,0,0,10">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="다른 PC에서 사용하려면 데이터를 내보내세요." TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="ExportButton" Content="데이터 내보내기" Width="120" Height="30" 
+                                  Margin="0,0,10,0" Click="ExportButton_Click"/>
+                            <Button x:Name="ImportButton" Content="데이터 가져오기" Width="120" Height="30" 
+                                  Click="ImportButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
                 </GroupBox>
             </StackPanel>
         </ScrollViewer>
