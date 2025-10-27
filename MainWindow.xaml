@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JISMemo"
         mc:Ignorable="d"
-        Title="JISMemo" Height="600" Width="800" WindowStartupLocation="CenterScreen">
+        Title="JISMemo" Height="600" Width="800" WindowStartupLocation="CenterScreen"
+        Icon="/Resources/JISMemo_Icon.ico">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>

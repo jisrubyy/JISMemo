@@ -105,32 +105,18 @@ public partial class MainWindow : Window
 
     private System.Drawing.Icon CreateStickyNoteIcon()
     {
-        var bitmap = new System.Drawing.Bitmap(16, 16);
-        using (var g = System.Drawing.Graphics.FromImage(bitmap))
+        try
         {
-            g.Clear(System.Drawing.Color.Transparent);
-            
-            var rect = new System.Drawing.Rectangle(1, 1, 14, 14);
-            g.FillRectangle(new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(255, 255, 153)), rect);
-            g.DrawRectangle(new System.Drawing.Pen(System.Drawing.Color.FromArgb(200, 200, 100)), rect);
-            
-            var corner = new System.Drawing.Point[] {
-                new System.Drawing.Point(12, 1),
-                new System.Drawing.Point(15, 1),
-                new System.Drawing.Point(15, 4)
-            };
-            g.FillPolygon(new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(230, 230, 120)), corner);
-            g.DrawPolygon(new System.Drawing.Pen(System.Drawing.Color.FromArgb(200, 200, 100)), corner);
-            
-            var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(150, 150, 150));
-            g.DrawLine(pen, 3, 5, 11, 5);
-            g.DrawLine(pen, 3, 7, 10, 7);
-            g.DrawLine(pen, 3, 9, 12, 9);
-            g.DrawLine(pen, 3, 11, 9, 11);
+            var uri = new Uri("pack://application:,,,/Resources/JISMemo_Icon.ico");
+            var streamInfo = WpfApplication.GetResourceStream(uri);
+            if (streamInfo != null)
+            {
+                return new System.Drawing.Icon(streamInfo.Stream, 16, 16);
+            }
         }
+        catch { }
         
-        var handle = bitmap.GetHicon();
-        return new System.Drawing.Icon(System.Drawing.Icon.FromHandle(handle), 16, 16);
+        return SystemIcons.Application;
     }
 
     private void MainWindow_StateChanged(object? sender, EventArgs e)

@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using RegistryKey = Microsoft.Win32.RegistryKey;
 
 namespace JISMemo;
 
@@ -58,6 +59,44 @@ public partial class SettingsWindow : Window
         UpdateEncryptionStatus();
         UpdateColorPreview();
         InitializeNoteThemeComboBox();
+        LoadAutoStartSetting();
+    }
+    
+    private void LoadAutoStartSetting()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false);
+            var value = key?.GetValue("JISMemo");
+            AutoStartCheckBox.IsChecked = value != null;
+        }
+        catch { }
+    }
+    
+    private void AutoStartCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+            if (key == null) return;
+            
+            if (AutoStartCheckBox.IsChecked == true)
+            {
+                var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                if (!string.IsNullOrEmpty(exePath))
+                {
+                    key.SetValue("JISMemo", $"\"{exePath}\"");
+                }
+            }
+            else
+            {
+                key.DeleteValue("JISMemo", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"자동 시작 설정 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
     
     private void InitializeNoteThemeComboBox()

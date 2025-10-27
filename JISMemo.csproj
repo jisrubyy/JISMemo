@@ -25,8 +25,11 @@
         <AssemblyDescription>포스트잇 스타일 메모 애플리케이션</AssemblyDescription>
         <AssemblyCompany>JIS</AssemblyCompany>
         <AssemblyProduct>JISMemo</AssemblyProduct>
-        <AssemblyVersion>1.0.1.0</AssemblyVersion>
-        <FileVersion>1.0.1.0</FileVersion>
+        <AssemblyVersion>1.2</AssemblyVersion>
+        <FileVersion>1.2</FileVersion>
+        <ApplicationIcon>Resources\JISMemo_Icon.ico</ApplicationIcon>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>TeamJistory.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <!-- Release-specific tweaks to keep output to a single EXE (no PDB) -->
@@ -34,5 +37,8 @@
         <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
+    <ItemGroup>
+      <Resource Include="Resources\JISMemo_Icon.ico" />
+    </ItemGroup>
 
 </Project>
