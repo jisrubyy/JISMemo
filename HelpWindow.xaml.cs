@@ -9,8 +9,12 @@ public partial class HelpWindow : Window
     public HelpWindow()
     {
         InitializeComponent();
-        VersionInfo = $"{AppInfo.AppName} v{AppInfo.FullVersion}\n{AppInfo.Description}\n개발자: {AppInfo.Developer}\nContact: {AppInfo.ContactEmail1}\n{AppInfo.ContactEmail2}";
+        Title = Localization.HelpTitle;
+        var description = Localization.CurrentLanguage == "ko" ? AppInfo.Description : "Sticky Note Style Memo Application";
+        var developer = Localization.CurrentLanguage == "ko" ? "개발자" : "Developer";
+        VersionInfo = $"{AppInfo.AppName} v{AppInfo.FullVersion}\n{description}\n{developer}: {AppInfo.Developer}\nContact: {AppInfo.ContactEmail1}\n{AppInfo.ContactEmail2}";
         DataContext = this;
+        OkButton.Content = Localization.OK;
     }
 
     private void OkButton_Click(object sender, RoutedEventArgs e)

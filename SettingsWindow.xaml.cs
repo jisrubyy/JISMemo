@@ -22,6 +22,8 @@ public partial class SettingsWindow : Window
     public bool NoteThemeChanged { get; private set; }
     public string? NewNoteColor { get; private set; }
     public string? NewNoteTextColor { get; private set; }
+    public bool LanguageChanged { get; private set; }
+    public string? NewLanguage { get; private set; }
     private readonly NoteService _noteService;
     private readonly SettingsService _settingsService = new();
     private readonly (string Name, string BgColor, string TextColor)[] _noteThemes = new[]
@@ -60,6 +62,53 @@ public partial class SettingsWindow : Window
         UpdateColorPreview();
         InitializeNoteThemeComboBox();
         LoadAutoStartSetting();
+        InitializeLanguageComboBox();
+        UpdateUITexts();
+    }
+    
+    private void UpdateUITexts()
+    {
+        Title = Localization.SettingsTitle;
+        AutoStartCheckBox.Content = Localization.AutoStart;
+        SetPasswordButton.Content = Localization.SetPassword;
+        RemovePasswordButton.Content = Localization.RemovePassword;
+        ChangeColorButton.Content = Localization.ChangeColor;
+        ResetColorButton.Content = Localization.ResetToDefault;
+        ExportButton.Content = Localization.ExportData;
+        ImportButton.Content = Localization.ImportData;
+        OkButton.Content = Localization.OK;
+        CancelButton.Content = Localization.Cancel;
+        BrowseButton.Content = Localization.Browse;
+    }
+    
+    private void InitializeLanguageComboBox()
+    {
+        LanguageComboBox.Items.Add("한국어 (Korean)");
+        LanguageComboBox.Items.Add("English");
+        
+        var settings = _settingsService.LoadSettings();
+        LanguageComboBox.SelectedIndex = settings.Language == "en" ? 1 : 0;
+        NewLanguage = settings.Language;
+    }
+    
+    private void LanguageComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (LanguageComboBox.SelectedIndex < 0) return;
+        
+        var newLang = LanguageComboBox.SelectedIndex == 1 ? "en" : "ko";
+        var settings = _settingsService.LoadSettings();
+        
+        if (newLang != settings.Language)
+        {
+            NewLanguage = newLang;
+            LanguageChanged = true;
+            LanguageChangeNote.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            LanguageChanged = false;
+            LanguageChangeNote.Visibility = Visibility.Collapsed;
+        }
     }
     
     private void LoadAutoStartSetting()
@@ -101,9 +150,20 @@ public partial class SettingsWindow : Window
     
     private void InitializeNoteThemeComboBox()
     {
-        foreach (var theme in _noteThemes)
+        var themeNames = new[] {
+            Localization.ClassicYellow,
+            Localization.PastelPink,
+            Localization.MintGreen,
+            Localization.SkyBlue,
+            Localization.Lavender,
+            Localization.Peach,
+            Localization.DarkGray,
+            Localization.NavyBlue
+        };
+        
+        foreach (var name in themeNames)
         {
-            NoteThemeComboBox.Items.Add(theme.Name);
+            NoteThemeComboBox.Items.Add(name);
         }
         
         var currentTheme = Array.FindIndex(_noteThemes, t => t.BgColor == NewNoteColor);
@@ -127,7 +187,7 @@ public partial class SettingsWindow : Window
     private void UpdateEncryptionStatus()
     {
         bool isEncrypted = _noteService.IsEncryptionEnabled();
-        EncryptionStatusText.Text = isEncrypted ? "암호화 상태: 활성화" : "암호화 상태: 비활성화";
+        EncryptionStatusText.Text = $"{Localization.EncryptionStatus}: {(isEncrypted ? Localization.Enabled : Localization.Disabled)}";
         SetPasswordButton.IsEnabled = !isEncrypted;
         RemovePasswordButton.IsEnabled = isEncrypted;
     }

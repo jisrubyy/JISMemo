@@ -46,6 +46,7 @@ public partial class MainWindow : Window
         
         _noteService = new NoteService(_currentUser);
         _appSettings = _settingsService.LoadSettings();
+        Localization.CurrentLanguage = _appSettings.Language;
         
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
@@ -53,6 +54,7 @@ public partial class MainWindow : Window
         InitializeSystemTray();
         UpdateCurrentUserDisplay();
         ApplyBackgroundColor();
+        UpdateUITexts();
     }
     
     private void ApplyBackgroundColor()
@@ -70,7 +72,19 @@ public partial class MainWindow : Window
     
     private void UpdateCurrentUserDisplay()
     {
-        CurrentUserText.Text = $"사용자: {_currentUser}";
+        CurrentUserText.Text = $"{Localization.CurrentUser}: {_currentUser}";
+    }
+    
+    private void UpdateUITexts()
+    {
+        AddNoteButton.Content = Localization.AddNote;
+        SwitchUserButton.Content = Localization.SwitchUser;
+        SettingsButton.Content = Localization.Settings;
+        HelpButton.Content = Localization.Help;
+        CreditButton.Content = Localization.Credit;
+        MinimizeButton.Content = Localization.Minimize;
+        ExitButton.Content = Localization.Exit;
+        UpdateCurrentUserDisplay();
     }
 
     private void InitializeSystemTray()
@@ -79,16 +93,17 @@ public partial class MainWindow : Window
         {
             Icon = CreateStickyNoteIcon(),
             Visible = true,
-            Text = $"{AppInfo.AppName} v{AppInfo.FullVersion} - 더블클릭으로 열기"
+            Text = $"{AppInfo.AppName} v{AppInfo.FullVersion} - {Localization.DoubleClickToOpen}"
         };
         
         var contextMenu = new ContextMenuStrip();
-        contextMenu.Items.Add("열기", null, (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); });
-        contextMenu.Items.Add("사용자 전환", null, (s, e) => SwitchUser());
-        contextMenu.Items.Add("설정", null, (s, e) => ShowSettings());
-        contextMenu.Items.Add("도움말", null, (s, e) => ShowHelp());
+        contextMenu.Items.Add(Localization.Open, null, (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); });
+        contextMenu.Items.Add(Localization.SwitchUser, null, (s, e) => SwitchUser());
+        contextMenu.Items.Add(Localization.Settings, null, (s, e) => ShowSettings());
+        contextMenu.Items.Add(Localization.Help, null, (s, e) => ShowHelp());
+        contextMenu.Items.Add(Localization.Credit, null, (s, e) => { var creditWindow = new CreditWindow(); creditWindow.ShowDialog(); });
         contextMenu.Items.Add("-");
-        contextMenu.Items.Add("종료", null, (s, e) => WpfApplication.Current.Shutdown());
+        contextMenu.Items.Add(Localization.Exit, null, (s, e) => WpfApplication.Current.Shutdown());
         _notifyIcon.ContextMenuStrip = contextMenu;
         
         _notifyIcon.DoubleClick += (s, e) => { Show(); WindowState = WindowState.Normal; Activate(); };
@@ -124,7 +139,7 @@ public partial class MainWindow : Window
         if (WindowState == WindowState.Minimized)
         {
             Hide();
-            _notifyIcon!.ShowBalloonTip(2000, $"{AppInfo.AppName} v{AppInfo.FullVersion}", "시스템 트레이로 최소화되었습니다.", System.Windows.Forms.ToolTipIcon.Info);
+            _notifyIcon!.ShowBalloonTip(2000, $"{AppInfo.AppName} v{AppInfo.FullVersion}", Localization.MinimizedToTray, System.Windows.Forms.ToolTipIcon.Info);
         }
     }
 
@@ -186,7 +201,7 @@ public partial class MainWindow : Window
         {
             Left = 200 + _notes.Count * 20,
             Top = 80 + _notes.Count * 20,
-            Content = "새 메모",
+            Content = Localization.NewNote,
             Owner = _currentUser,
             DeviceType = Environment.OSVersion.Platform.ToString(),
             DeviceName = Environment.MachineName,
@@ -225,7 +240,7 @@ public partial class MainWindow : Window
 
         var titleText = new System.Windows.Controls.TextBlock
         {
-            Text = "메모",
+            Text = Localization.Memo,
             Foreground = System.Windows.Media.Brushes.White,
             VerticalAlignment = System.Windows.VerticalAlignment.Center,
             Margin = new System.Windows.Thickness(6, 0, 0, 0),
@@ -427,8 +442,8 @@ public partial class MainWindow : Window
         closeButton.Click += (s, e) =>
         {
             var result = System.Windows.MessageBox.Show(
-                "이 메모를 삭제하시겠습니까?",
-                "메모 삭제",
+                Localization.DeleteNoteMessage,
+                Localization.DeleteNoteTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
             
@@ -569,19 +584,19 @@ public partial class MainWindow : Window
         
         var colorMenuItem = new System.Windows.Controls.MenuItem
         {
-            Header = "색상 테마"
+            Header = Localization.ColorTheme
         };
         
         var themes = new[]
         {
-            new { Name = "클래식 노랑", BgColor = "#FFFF99", TextColor = "#000000" },
-            new { Name = "파스텔 핑크", BgColor = "#FFB3D9", TextColor = "#000000" },
-            new { Name = "민트 그린", BgColor = "#B3FFB3", TextColor = "#000000" },
-            new { Name = "스카이 블루", BgColor = "#B3E5FF", TextColor = "#000000" },
-            new { Name = "라벤더", BgColor = "#E6B3FF", TextColor = "#000000" },
-            new { Name = "피치", BgColor = "#FFD9B3", TextColor = "#000000" },
-            new { Name = "다크 그레이", BgColor = "#4A4A4A", TextColor = "#FFFFFF" },
-            new { Name = "네이비 블루", BgColor = "#2C3E50", TextColor = "#FFFFFF" }
+            new { Name = Localization.ClassicYellow, BgColor = "#FFFF99", TextColor = "#000000" },
+            new { Name = Localization.PastelPink, BgColor = "#FFB3D9", TextColor = "#000000" },
+            new { Name = Localization.MintGreen, BgColor = "#B3FFB3", TextColor = "#000000" },
+            new { Name = Localization.SkyBlue, BgColor = "#B3E5FF", TextColor = "#000000" },
+            new { Name = Localization.Lavender, BgColor = "#E6B3FF", TextColor = "#000000" },
+            new { Name = Localization.Peach, BgColor = "#FFD9B3", TextColor = "#000000" },
+            new { Name = Localization.DarkGray, BgColor = "#4A4A4A", TextColor = "#FFFFFF" },
+            new { Name = Localization.NavyBlue, BgColor = "#2C3E50", TextColor = "#FFFFFF" }
         };
         
         foreach (var theme in themes)
@@ -603,25 +618,32 @@ public partial class MainWindow : Window
         
         var switchUserMenuItem = new System.Windows.Controls.MenuItem
         {
-            Header = "사용자 전환"
+            Header = Localization.SwitchUser
         };
         switchUserMenuItem.Click += (s, e) => SwitchUser();
         
         var settingsMenuItem = new System.Windows.Controls.MenuItem
         {
-            Header = "설정"
+            Header = Localization.Settings
         };
         settingsMenuItem.Click += (s, e) => ShowSettings();
         
         var helpMenuItem = new System.Windows.Controls.MenuItem
         {
-            Header = "도움말"
+            Header = Localization.Help
         };
         helpMenuItem.Click += (s, e) => ShowHelp();
+        
+        var creditMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = Localization.Credit
+        };
+        creditMenuItem.Click += (s, e) => { var creditWindow = new CreditWindow(); creditWindow.ShowDialog(); };
         
         contextMenu.Items.Add(switchUserMenuItem);
         contextMenu.Items.Add(settingsMenuItem);
         contextMenu.Items.Add(helpMenuItem);
+        contextMenu.Items.Add(creditMenuItem);
         return contextMenu;
     }
     
@@ -754,9 +776,26 @@ public partial class MainWindow : Window
                 _appSettings.DefaultNoteTextColor = settingsWindow.NewNoteTextColor ?? "#000000";
             }
             
-            if (settingsWindow.ColorChanged || settingsWindow.NoteThemeChanged)
+            if (settingsWindow.LanguageChanged)
+            {
+                _appSettings.Language = settingsWindow.NewLanguage ?? "ko";
+            }
+            
+            if (settingsWindow.ColorChanged || settingsWindow.NoteThemeChanged || settingsWindow.LanguageChanged)
             {
                 _settingsService.SaveSettings(_appSettings);
+            }
+            
+            if (settingsWindow.LanguageChanged)
+            {
+                System.Windows.MessageBox.Show(
+                    Localization.CurrentLanguage == "ko" ? 
+                        "언어 변경은 프로그램 재시작 후 적용됩니다." : 
+                        "Language change will be applied after restart.",
+                    Localization.Information,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
             }
             
             System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -771,6 +810,12 @@ public partial class MainWindow : Window
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
         ShowHelp();
+    }
+    
+    private void CreditButton_Click(object sender, RoutedEventArgs e)
+    {
+        var creditWindow = new CreditWindow();
+        creditWindow.ShowDialog();
     }
     
     private void SwitchUserButton_Click(object sender, RoutedEventArgs e)

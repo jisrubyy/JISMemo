@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JISMemo"
         mc:Ignorable="d"
-        Title="JISMemo" Height="600" Width="800" WindowStartupLocation="CenterScreen"
+        Title="JISMemo" Height="600" Width="1000" WindowStartupLocation="CenterScreen"
         Icon="/Resources/JISMemo_Icon.ico">
     <Grid>
         <Grid.RowDefinitions>
@@ -20,6 +20,7 @@
                     <Button x:Name="SwitchUserButton" Content="👤 사용자 전환" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SwitchUserButton_Click"/>
                     <Button x:Name="SettingsButton" Content="⚙️ 설정" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SettingsButton_Click"/>
                     <Button x:Name="HelpButton" Content="❓ 도움말" Height="32" Padding="12,6" Margin="8,0,0,0" Click="HelpButton_Click"/>
+                    <Button x:Name="CreditButton" Content="📜 제작자 정보" Height="32" Padding="12,6" Margin="8,0,0,0" Click="CreditButton_Click"/>
                     <Button x:Name="MinimizeButton" Content="— 최소화" Height="32" Padding="12,6" Margin="8,0,0,0" Click="MinimizeButton_Click" Style="{StaticResource SecondaryButton}"/>
                     <Button x:Name="ExitButton" Content="✖ 종료" Height="32" Padding="12,6" Margin="8,0,0,0" Click="ExitButton_Click" Style="{StaticResource DangerButton}"/>
                 </StackPanel>

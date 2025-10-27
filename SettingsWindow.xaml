@@ -70,7 +70,13 @@
                         <CheckBox x:Name="AutoStartCheckBox" Content="Windows 시작 시 자동으로 실행" 
                                 Margin="0,5" Checked="AutoStartCheckBox_Changed" Unchecked="AutoStartCheckBox_Changed"/>
                         <TextBlock Text="프로그램이 시스템 트레이에서 시작됩니다." 
-                                 Foreground="Gray" FontSize="11" Margin="20,0,0,5"/>
+                                 Foreground="Gray" FontSize="11" Margin="20,0,0,10"/>
+                        
+                        <TextBlock Text="언어:" FontWeight="Bold" Margin="0,5,0,5"/>
+                        <ComboBox x:Name="LanguageComboBox" Width="200" Height="30" HorizontalAlignment="Left" 
+                                SelectionChanged="LanguageComboBox_SelectionChanged"/>
+                        <TextBlock x:Name="LanguageChangeNote" Text="언어 변경은 프로그램 재시작 후 적용됩니다." 
+                                 Foreground="Orange" FontSize="11" Margin="0,5,0,0" Visibility="Collapsed"/>
                     </StackPanel>
                 </GroupBox>
                 
