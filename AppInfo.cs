@@ -2,7 +2,8 @@ namespace JISMemo;
 
 public static class AppInfo
 {
-    public const string Version = "1.1";
+    public const string Version = "1.2";
+    public static string FullVersion => $"{Version}.{DateTime.Now:yyyyMMdd}";
     public const string AppName = "JISMemo";
     public const string Developer = "JIS";
     public const string Description = "포스트잇 스타일 메모 애플리케이션";

@@ -68,7 +68,7 @@ public partial class MainWindow : Window
         {
             Icon = CreateStickyNoteIcon(),
             Visible = true,
-            Text = $"{AppInfo.AppName} v{AppInfo.Version} - 더블클릭으로 열기"
+            Text = $"{AppInfo.AppName} v{AppInfo.FullVersion} - 더블클릭으로 열기"
         };
         
         var contextMenu = new ContextMenuStrip();
@@ -127,7 +127,7 @@ public partial class MainWindow : Window
         if (WindowState == WindowState.Minimized)
         {
             Hide();
-            _notifyIcon!.ShowBalloonTip(2000, $"{AppInfo.AppName} v{AppInfo.Version}", "시스템 트레이로 최소화되었습니다.", System.Windows.Forms.ToolTipIcon.Info);
+            _notifyIcon!.ShowBalloonTip(2000, $"{AppInfo.AppName} v{AppInfo.FullVersion}", "시스템 트레이로 최소화되었습니다.", System.Windows.Forms.ToolTipIcon.Info);
         }
     }
 
@@ -143,7 +143,6 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        // 암호화가 활성화되어 있으면 비밀번호 입력 요청
         if (_noteService.IsEncryptionEnabled())
         {
             var hint = _noteService.GetPasswordHint();
@@ -165,22 +164,6 @@ public partial class MainWindow : Window
                 
                 System.Windows.MessageBox.Show("비밀번호가 올바르지 않습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 passwordWindow = new PasswordWindow(hint);
-            }
-        }
-        else
-        {
-            // 첫 실행 시 비밀번호 설정 여부 확인
-            var result = System.Windows.MessageBox.Show("메모를 암호화하시겠습니까?\n(나중에 설정에서 변경 가능)", "암호화 설정", 
-                MessageBoxButton.YesNo, MessageBoxImage.Question);
-            
-            if (result == MessageBoxResult.Yes)
-            {
-                var setupWindow = new PasswordSetupWindow();
-                if (setupWindow.ShowDialog() == true)
-                {
-                    _noteService.SetupPassword(setupWindow.Password, setupWindow.Hint);
-                    _currentPassword = setupWindow.Password;
-                }
             }
         }
         

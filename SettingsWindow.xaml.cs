@@ -41,6 +41,7 @@ public partial class SettingsWindow : Window
     {
         bool isEncrypted = _noteService.IsEncryptionEnabled();
         EncryptionStatusText.Text = isEncrypted ? "암호화 상태: 활성화" : "암호화 상태: 비활성화";
+        SetPasswordButton.IsEnabled = !isEncrypted;
         RemovePasswordButton.IsEnabled = isEncrypted;
     }
 
@@ -93,6 +94,17 @@ public partial class SettingsWindow : Window
     {
         DialogResult = false;
         Close();
+    }
+    
+    private void SetPasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        var setupWindow = new PasswordSetupWindow();
+        if (setupWindow.ShowDialog() == true)
+        {
+            _noteService.SetupPassword(setupWindow.Password, setupWindow.Hint);
+            UpdateEncryptionStatus();
+            MessageBox.Show("암호가 설정되었습니다.\n다음 실행부터 적용됩니다.", "완료", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
     
     private void RemovePasswordButton_Click(object sender, RoutedEventArgs e)
