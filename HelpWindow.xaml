@@ -40,9 +40,19 @@
                 • 빨간색 영역은 현재 보이는 화면 영역입니다.
             </TextBlock>
             
+            <TextBlock Text="사용자 관리" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • 여러 사용자를 등록하여 각자의 메모를 분리 관리할 수 있습니다.<LineBreak/>
+                • '사용자 전환' 버튼으로 다른 사용자로 전환할 수 있습니다.<LineBreak/>
+                • 각 사용자는 독립적인 메모와 설정을 가집니다.<LineBreak/>
+                • 'Default' 사용자는 기본 사용자로 삭제할 수 없습니다.<LineBreak/>
+                • 현재 사용자는 상단 우측에 표시됩니다.
+            </TextBlock>
+            
             <TextBlock Text="보안 (암호화)" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
-                • 첫 실행 시 메모 암호화 여부를 선택할 수 있습니다.<LineBreak/>
+                • 설정 → 암호 관리에서 암호를 설정/제거할 수 있습니다.<LineBreak/>
+                • 사용자별로 독립적인 암호를 설정할 수 있습니다.<LineBreak/>
                 • 암호화를 활성화하면 AES-256으로 메모가 암호화됩니다.<LineBreak/>
                 • 비밀번호 힌트를 설정하여 비밀번호를 기억하는데 도움을 받을 수 있습니다.<LineBreak/>
                 • 비밀번호를 분실하면 메모를 복구할 수 없으니 주의하세요!
@@ -55,14 +65,16 @@
                 • 트레이 아이콘을 우클릭하면 메뉴가 나타납니다
             </TextBlock>
             
-            <TextBlock Text="데이터 저장" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock Text="데이터 저장 및 백업" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
                 • 모든 메모는 JSON 형식으로 자동 저장됩니다<LineBreak/>
                 • 메모 내용, 위치, 크기, 색상, 폰트 크기가 저장됩니다<LineBreak/>
-                • 생성 일시와 수정 일시가 자동으로 기록됩니다<LineBreak/>
+                • 생성 일시, 수정 일시, 소유자, 기기 정보가 자동으로 기록됩니다<LineBreak/>
                 • PC를 재부팅해도 메모 내용과 위치가 유지됩니다<LineBreak/>
                 • 이미지도 Base64로 인코딩되어 함께 저장됩니다<LineBreak/>
-                • 암호화 활성화 시 모든 데이터가 암호화되어 저장됩니다
+                • 암호화 활성화 시 모든 데이터가 암호화되어 저장됩니다<LineBreak/>
+                • 설정 → 데이터 백업/복원에서 .jmb 파일로 내보내기/가져오기 가능<LineBreak/>
+                • 다른 PC로 데이터를 이동할 때 .jmb 파일을 사용하세요
             </TextBlock>
             
             <TextBlock Text="단축키" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
@@ -80,9 +92,12 @@
                 ✓ 이미지 붙여넣기 지원<LineBreak/>
                 ✓ 폰트 크기 조절 (메모별 저장)<LineBreak/>
                 ✓ 미니맵으로 전체 보기<LineBreak/>
+                ✓ 다중 사용자 지원<LineBreak/>
+                ✓ 사용자별 독립적인 메모 관리<LineBreak/>
                 ✓ AES-256 암호화 지원<LineBreak/>
                 ✓ 비밀번호 힌트 시스템<LineBreak/>
-                ✓ 메모 정보 확인 (생성/수정 일시)<LineBreak/>
+                ✓ 메모 정보 확인 (생성/수정 일시, 소유자, 기기 정보)<LineBreak/>
+                ✓ 데이터 내보내기/가져오기 (.jmb)<LineBreak/>
                 ✓ 시스템 트레이 최소화<LineBreak/>
                 ✓ 자동 저장 및 복원
             </TextBlock>

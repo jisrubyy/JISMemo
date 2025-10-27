@@ -28,19 +28,13 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         
-        // 사용자 선택
         var userService = new UserService();
-        var currentUser = userService.GetCurrentUser();
+        userService.EnsureDefaultUser();
         
-        if (string.IsNullOrEmpty(currentUser) || userService.GetAllUsers().Count == 0)
+        var currentUser = userService.GetCurrentUser();
+        if (string.IsNullOrEmpty(currentUser))
         {
-            var userSelection = new UserSelectionWindow();
-            if (userSelection.ShowDialog() != true || string.IsNullOrEmpty(userSelection.SelectedUser))
-            {
-                WpfApplication.Current.Shutdown();
-                return;
-            }
-            _currentUser = userSelection.SelectedUser;
+            _currentUser = "Default";
             userService.SetCurrentUser(_currentUser);
         }
         else
@@ -188,7 +182,9 @@ public partial class MainWindow : Window
             Left = 200 + _notes.Count * 20,
             Top = 80 + _notes.Count * 20,
             Content = "새 메모",
-            Owner = _currentUser
+            Owner = _currentUser,
+            DeviceType = Environment.OSVersion.Platform.ToString(),
+            DeviceName = Environment.MachineName
         };
         _notes.Add(note);
         CreateNoteControl(note);

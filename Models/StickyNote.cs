@@ -17,6 +17,8 @@ public sealed class StickyNote : INotifyPropertyChanged
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime ModifiedAt { get; set; } = DateTime.Now;
     public string? Owner { get; set; }
+    public string? DeviceType { get; set; }
+    public string? DeviceName { get; set; }
     
     public string Content
     {

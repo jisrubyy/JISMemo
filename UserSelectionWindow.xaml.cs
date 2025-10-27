@@ -86,6 +86,12 @@ public partial class UserSelectionWindow : Window
     {
         if (UserListBox.SelectedItem is string username)
         {
+            if (username == "Default")
+            {
+                MessageBox.Show("Default 사용자는 삭제할 수 없습니다.", "알림", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            
             var result = MessageBox.Show(
                 $"'{username}' 사용자와 모든 데이터를 삭제하시겠습니까?",
                 "사용자 제거",

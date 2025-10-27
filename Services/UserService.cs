@@ -18,6 +18,16 @@ public class UserService
         return Path.Combine(appDataPath, UsersFileName);
     }
 
+    public void EnsureDefaultUser()
+    {
+        var users = GetAllUsers();
+        if (!users.Any(u => u.Username == "Default"))
+        {
+            users.Insert(0, new UserProfile { Username = "Default" });
+            SaveUsers(users);
+        }
+    }
+    
     public List<UserProfile> GetAllUsers()
     {
         try
@@ -26,7 +36,17 @@ public class UserService
             if (!File.Exists(path)) return new List<UserProfile>();
             
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<List<UserProfile>>(json) ?? new List<UserProfile>();
+            var users = JsonSerializer.Deserialize<List<UserProfile>>(json) ?? new List<UserProfile>();
+            
+            // Default를 맨 위로
+            var defaultUser = users.FirstOrDefault(u => u.Username == "Default");
+            if (defaultUser != null)
+            {
+                users.Remove(defaultUser);
+                users.Insert(0, defaultUser);
+            }
+            
+            return users;
         }
         catch
         {
@@ -57,6 +77,8 @@ public class UserService
 
     public void RemoveUser(string username)
     {
+        if (username == "Default") return;
+        
         var users = GetAllUsers();
         users.RemoveAll(u => u.Username == username);
         SaveUsers(users);
