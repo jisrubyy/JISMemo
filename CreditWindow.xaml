@@ -27,8 +27,8 @@
             
             <TextBlock x:Name="WebsiteLabel" Text="개발 및 배포" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
             <TextBlock Margin="20,0,0,0">
-                <Hyperlink x:Name="WebsiteLink" NavigateUri="https://teamjistory-publicwebhome.github.io/TeamJistory-Public-WebHome/" RequestNavigate="Hyperlink_RequestNavigate">
-                    <Run Text="https://teamjistory-publicwebhome.github.io/TeamJistory-Public-WebHome/"/>
+                <Hyperlink x:Name="WebsiteLink" NavigateUri="https://teamjistory.github.io/TeamJistoryPage/" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Run Text="https://teamjistory.github.io/TeamJistoryPage/"/>
                 </Hyperlink>
             </TextBlock>
         </StackPanel>

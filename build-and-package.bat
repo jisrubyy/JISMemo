@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+cd /d "%~dp0"
 echo JISMemo 단일 실행 파일 빌드/패키징
 echo ================================
 
@@ -24,7 +25,7 @@ set EXE_NAME=JISMemo.exe
 if not exist "%DIST_DIR%" mkdir "%DIST_DIR%"
 
 echo 1. Release 단일파일 게시 중...
-dotnet publish -c Release
+dotnet publish JISMemo.csproj -c Release
 if %errorlevel% neq 0 (
     echo 빌드 실패!
     pause
