@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using JISMemo.Services;
 using Microsoft.Win32;
 
 namespace JISMemo;
@@ -8,10 +9,13 @@ public partial class SettingsWindow : Window
 {
     public string? SelectedPath { get; private set; }
     public bool UseCustomPath { get; private set; }
+    public bool PasswordRemoved { get; private set; }
+    private readonly NoteService _noteService;
 
-    public SettingsWindow(string currentPath, bool useCustomPath)
+    public SettingsWindow(string currentPath, bool useCustomPath, NoteService noteService)
     {
         InitializeComponent();
+        _noteService = noteService;
         
         CurrentPathTextBlock.Text = currentPath;
         
@@ -24,6 +28,15 @@ public partial class SettingsWindow : Window
         {
             DefaultLocationRadio.IsChecked = true;
         }
+        
+        UpdateEncryptionStatus();
+    }
+    
+    private void UpdateEncryptionStatus()
+    {
+        bool isEncrypted = _noteService.IsEncryptionEnabled();
+        EncryptionStatusText.Text = isEncrypted ? "암호화 상태: 활성화" : "암호화 상태: 비활성화";
+        RemovePasswordButton.IsEnabled = isEncrypted;
     }
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -75,5 +88,22 @@ public partial class SettingsWindow : Window
     {
         DialogResult = false;
         Close();
+    }
+    
+    private void RemovePasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        var result = System.Windows.MessageBox.Show(
+            "암호를 제거하면 메모가 암호화되지 않습니다.\n정말 제거하시겠습니까?",
+            "암호 제거 확인",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        
+        if (result == MessageBoxResult.Yes)
+        {
+            _noteService.DisableEncryption();
+            PasswordRemoved = true;
+            UpdateEncryptionStatus();
+            System.Windows.MessageBox.Show("암호가 제거되었습니다.", "완료", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

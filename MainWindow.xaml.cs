@@ -562,10 +562,18 @@ public partial class MainWindow : Window
 
     private async void ShowSettings()
     {
-        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath());
+        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService);
         if (settingsWindow.ShowDialog() == true)
         {
-            await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+            if (settingsWindow.PasswordRemoved)
+            {
+                await _noteService.SaveNotesAsync(_notes.ToList(), null);
+                _currentPassword = null;
+            }
+            else
+            {
+                await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+            }
             
             _noteService.SetDataPath(settingsWindow.SelectedPath);
             
@@ -582,6 +590,7 @@ public partial class MainWindow : Window
                 _notes.Add(note);
                 CreateNoteControl(note);
             }
+            UpdateMinimap();
             
             System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);
         }
