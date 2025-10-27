@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Media;
 using JISMemo.Models;
 using JISMemo.Services;
 using Microsoft.Win32;
@@ -15,12 +16,16 @@ public partial class SettingsWindow : Window
     public string? SelectedPath { get; private set; }
     public bool UseCustomPath { get; private set; }
     public bool PasswordRemoved { get; private set; }
+    public bool ColorChanged { get; private set; }
+    public string? NewBackgroundColor { get; private set; }
     private readonly NoteService _noteService;
+    private readonly SettingsService _settingsService = new();
 
-    public SettingsWindow(string currentPath, bool useCustomPath, NoteService noteService)
+    public SettingsWindow(string currentPath, bool useCustomPath, NoteService noteService, string currentBgColor)
     {
         InitializeComponent();
         _noteService = noteService;
+        NewBackgroundColor = currentBgColor;
         
         CurrentPathTextBlock.Text = currentPath;
         
@@ -35,6 +40,20 @@ public partial class SettingsWindow : Window
         }
         
         UpdateEncryptionStatus();
+        UpdateColorPreview();
+    }
+    
+    private void UpdateColorPreview()
+    {
+        try
+        {
+            ColorPreview.Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewBackgroundColor ?? "#F5F5F5"));
+        }
+        catch
+        {
+            ColorPreview.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.WhiteSmoke);
+        }
     }
     
     private void UpdateEncryptionStatus()
@@ -214,5 +233,32 @@ public partial class SettingsWindow : Window
                 MessageBox.Show($"가져오기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    }
+    
+    private void ChangeColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new System.Windows.Forms.ColorDialog();
+        
+        try
+        {
+            var currentColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewBackgroundColor ?? "#F5F5F5");
+            dialog.Color = System.Drawing.Color.FromArgb(currentColor.A, currentColor.R, currentColor.G, currentColor.B);
+        }
+        catch { }
+        
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var color = dialog.Color;
+            NewBackgroundColor = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+            ColorChanged = true;
+            UpdateColorPreview();
+        }
+    }
+    
+    private void ResetColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        NewBackgroundColor = "#F5F5F5";
+        ColorChanged = true;
+        UpdateColorPreview();
     }
 }

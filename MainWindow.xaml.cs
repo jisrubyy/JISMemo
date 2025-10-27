@@ -23,6 +23,8 @@ public partial class MainWindow : Window
     private NotifyIcon? _notifyIcon;
     private string? _currentPassword;
     private string _currentUser = "";
+    private readonly SettingsService _settingsService = new();
+    private AppSettings _appSettings;
 
     public MainWindow()
     {
@@ -43,12 +45,27 @@ public partial class MainWindow : Window
         }
         
         _noteService = new NoteService(_currentUser);
+        _appSettings = _settingsService.LoadSettings();
         
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
         InitializeSystemTray();
         UpdateCurrentUserDisplay();
+        ApplyBackgroundColor();
+    }
+    
+    private void ApplyBackgroundColor()
+    {
+        try
+        {
+            NotesCanvas.Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_appSettings.BackgroundColor));
+        }
+        catch
+        {
+            NotesCanvas.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.WhiteSmoke);
+        }
     }
     
     private void UpdateCurrentUserDisplay()
@@ -636,7 +653,7 @@ public partial class MainWindow : Window
 
     private async void ShowSettings()
     {
-        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService);
+        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService, _appSettings.BackgroundColor);
         if (settingsWindow.ShowDialog() == true)
         {
             if (settingsWindow.PasswordRemoved)
@@ -665,6 +682,13 @@ public partial class MainWindow : Window
                 CreateNoteControl(note);
             }
             UpdateMinimap();
+            
+            if (settingsWindow.ColorChanged)
+            {
+                _appSettings.BackgroundColor = settingsWindow.NewBackgroundColor ?? "#F5F5F5";
+                _settingsService.SaveSettings(_appSettings);
+                ApplyBackgroundColor();
+            }
             
             System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);
         }

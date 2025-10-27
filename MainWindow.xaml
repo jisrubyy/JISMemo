@@ -28,7 +28,7 @@
         </Border>
         
         <ScrollViewer x:Name="MainScrollViewer" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ScrollChanged="MainScrollViewer_ScrollChanged">
-            <Canvas x:Name="NotesCanvas" Background="#01000000" Width="3000" Height="3000"/>
+            <Canvas x:Name="NotesCanvas" Width="3000" Height="3000"/>
         </ScrollViewer>
         
         <Border Grid.Row="1" Width="200" Height="150" Background="#E0FFFFFF" BorderBrush="#333" BorderThickness="2" 
