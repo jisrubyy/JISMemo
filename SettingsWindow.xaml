@@ -49,10 +49,18 @@
                 <GroupBox Header="모양" Margin="0,0,0,10">
                     <StackPanel Margin="10">
                         <TextBlock Text="배경색:" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                             <Border x:Name="ColorPreview" Width="40" Height="40" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0"/>
                             <Button x:Name="ChangeColorButton" Content="색상 변경" Width="110" Height="35" Click="ChangeColorButton_Click"/>
                             <Button x:Name="ResetColorButton" Content="기본색으로" Width="110" Height="35" Margin="10,0,0,0" Click="ResetColorButton_Click" Style="{StaticResource SecondaryButton}"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="기본 메모 테마:" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="NoteThemePreview" Width="80" Height="60" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Margin="0,0,10,0">
+                                <TextBlock x:Name="NoteThemePreviewText" Text="메모" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                            </Border>
+                            <ComboBox x:Name="NoteThemeComboBox" Width="200" Height="35" SelectionChanged="NoteThemeComboBox_SelectionChanged"/>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>

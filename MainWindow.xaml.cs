@@ -201,7 +201,8 @@ public partial class MainWindow : Window
             Content = "새 메모",
             Owner = _currentUser,
             DeviceType = Environment.OSVersion.Platform.ToString(),
-            DeviceName = Environment.MachineName
+            DeviceName = Environment.MachineName,
+            Color = _appSettings.DefaultNoteColor
         };
         _notes.Add(note);
         CreateNoteControl(note);
@@ -294,10 +295,13 @@ public partial class MainWindow : Window
         // 텍스트 영역 높이(이미지 유무에 따라 조정)
         var textHeight = string.IsNullOrEmpty(note.ImageData) ? 170 : 80;
 
+        var textColor = (note.Color == "#4A4A4A" || note.Color == "#2C3E50") ? "#FFFFFF" : "#000000";
+        
         var textBox = new System.Windows.Controls.TextBox
         {
             Text = note.Content,
             Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(textColor)),
             BorderThickness = new System.Windows.Thickness(0),
             TextWrapping = System.Windows.TextWrapping.Wrap,
             AcceptsReturn = true,
@@ -421,7 +425,7 @@ public partial class MainWindow : Window
             }
         }));
 
-        textBox.ContextMenu = CreateNoteContextMenu();
+        textBox.ContextMenu = CreateNoteContextMenu(note, noteControl);
 
         // 이미지가 있으면 이미지 미리보기, 이후 텍스트 박스
         if (!string.IsNullOrEmpty(note.ImageData))
@@ -561,9 +565,43 @@ public partial class MainWindow : Window
         CreateNoteControl(note);
     }
 
-    private System.Windows.Controls.ContextMenu CreateNoteContextMenu()
+    private System.Windows.Controls.ContextMenu CreateNoteContextMenu(StickyNote note, System.Windows.Controls.Border noteControl)
     {
         var contextMenu = new System.Windows.Controls.ContextMenu();
+        
+        var colorMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "색상 테마"
+        };
+        
+        var themes = new[]
+        {
+            new { Name = "클래식 노랑", BgColor = "#FFFF99", TextColor = "#000000" },
+            new { Name = "파스텔 핑크", BgColor = "#FFB3D9", TextColor = "#000000" },
+            new { Name = "민트 그린", BgColor = "#B3FFB3", TextColor = "#000000" },
+            new { Name = "스카이 블루", BgColor = "#B3E5FF", TextColor = "#000000" },
+            new { Name = "라벤더", BgColor = "#E6B3FF", TextColor = "#000000" },
+            new { Name = "피치", BgColor = "#FFD9B3", TextColor = "#000000" },
+            new { Name = "다크 그레이", BgColor = "#4A4A4A", TextColor = "#FFFFFF" },
+            new { Name = "네이비 블루", BgColor = "#2C3E50", TextColor = "#FFFFFF" }
+        };
+        
+        foreach (var theme in themes)
+        {
+            var themeItem = new System.Windows.Controls.MenuItem
+            {
+                Header = theme.Name
+            };
+            themeItem.Click += (s, e) =>
+            {
+                note.Color = theme.BgColor;
+                ApplyNoteTheme(noteControl, theme.BgColor, theme.TextColor);
+            };
+            colorMenuItem.Items.Add(themeItem);
+        }
+        
+        contextMenu.Items.Add(colorMenuItem);
+        contextMenu.Items.Add(new System.Windows.Controls.Separator());
         
         var switchUserMenuItem = new System.Windows.Controls.MenuItem
         {
@@ -587,6 +625,28 @@ public partial class MainWindow : Window
         contextMenu.Items.Add(settingsMenuItem);
         contextMenu.Items.Add(helpMenuItem);
         return contextMenu;
+    }
+    
+    private void ApplyNoteTheme(System.Windows.Controls.Border noteControl, string bgColor, string textColor)
+    {
+        noteControl.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(bgColor));
+        
+        if (noteControl.Child is System.Windows.Controls.Grid grid)
+        {
+            foreach (var child in grid.Children)
+            {
+                if (child is System.Windows.Controls.StackPanel contentPanel)
+                {
+                    foreach (var item in contentPanel.Children)
+                    {
+                        if (item is System.Windows.Controls.TextBox textBox)
+                        {
+                            textBox.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(textColor));
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private async void SwitchUser()
@@ -653,7 +713,8 @@ public partial class MainWindow : Window
 
     private async void ShowSettings()
     {
-        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService, _appSettings.BackgroundColor);
+        var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService, 
+            _appSettings.BackgroundColor, _appSettings.DefaultNoteColor, _appSettings.DefaultNoteTextColor);
         if (settingsWindow.ShowDialog() == true)
         {
             if (settingsWindow.PasswordRemoved)
@@ -686,8 +747,18 @@ public partial class MainWindow : Window
             if (settingsWindow.ColorChanged)
             {
                 _appSettings.BackgroundColor = settingsWindow.NewBackgroundColor ?? "#F5F5F5";
-                _settingsService.SaveSettings(_appSettings);
                 ApplyBackgroundColor();
+            }
+            
+            if (settingsWindow.NoteThemeChanged)
+            {
+                _appSettings.DefaultNoteColor = settingsWindow.NewNoteColor ?? "#FFFF99";
+                _appSettings.DefaultNoteTextColor = settingsWindow.NewNoteTextColor ?? "#000000";
+            }
+            
+            if (settingsWindow.ColorChanged || settingsWindow.NoteThemeChanged)
+            {
+                _settingsService.SaveSettings(_appSettings);
             }
             
             System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);

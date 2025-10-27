@@ -18,14 +18,30 @@ public partial class SettingsWindow : Window
     public bool PasswordRemoved { get; private set; }
     public bool ColorChanged { get; private set; }
     public string? NewBackgroundColor { get; private set; }
+    public bool NoteThemeChanged { get; private set; }
+    public string? NewNoteColor { get; private set; }
+    public string? NewNoteTextColor { get; private set; }
     private readonly NoteService _noteService;
     private readonly SettingsService _settingsService = new();
+    private readonly (string Name, string BgColor, string TextColor)[] _noteThemes = new[]
+    {
+        ("클래식 노랑", "#FFFF99", "#000000"),
+        ("파스텔 핑크", "#FFB3D9", "#000000"),
+        ("민트 그린", "#B3FFB3", "#000000"),
+        ("스카이 블루", "#B3E5FF", "#000000"),
+        ("라벤더", "#E6B3FF", "#000000"),
+        ("피치", "#FFD9B3", "#000000"),
+        ("다크 그레이", "#4A4A4A", "#FFFFFF"),
+        ("네이비 블루", "#2C3E50", "#FFFFFF")
+    };
 
-    public SettingsWindow(string currentPath, bool useCustomPath, NoteService noteService, string currentBgColor)
+    public SettingsWindow(string currentPath, bool useCustomPath, NoteService noteService, string currentBgColor, string currentNoteColor, string currentNoteTextColor)
     {
         InitializeComponent();
         _noteService = noteService;
         NewBackgroundColor = currentBgColor;
+        NewNoteColor = currentNoteColor;
+        NewNoteTextColor = currentNoteTextColor;
         
         CurrentPathTextBlock.Text = currentPath;
         
@@ -41,6 +57,19 @@ public partial class SettingsWindow : Window
         
         UpdateEncryptionStatus();
         UpdateColorPreview();
+        InitializeNoteThemeComboBox();
+    }
+    
+    private void InitializeNoteThemeComboBox()
+    {
+        foreach (var theme in _noteThemes)
+        {
+            NoteThemeComboBox.Items.Add(theme.Name);
+        }
+        
+        var currentTheme = Array.FindIndex(_noteThemes, t => t.BgColor == NewNoteColor);
+        NoteThemeComboBox.SelectedIndex = currentTheme >= 0 ? currentTheme : 0;
+        UpdateNoteThemePreview();
     }
     
     private void UpdateColorPreview()
@@ -260,5 +289,29 @@ public partial class SettingsWindow : Window
         NewBackgroundColor = "#F5F5F5";
         ColorChanged = true;
         UpdateColorPreview();
+    }
+    
+    private void NoteThemeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (NoteThemeComboBox.SelectedIndex >= 0 && NoteThemeComboBox.SelectedIndex < _noteThemes.Length)
+        {
+            var theme = _noteThemes[NoteThemeComboBox.SelectedIndex];
+            NewNoteColor = theme.BgColor;
+            NewNoteTextColor = theme.TextColor;
+            NoteThemeChanged = true;
+            UpdateNoteThemePreview();
+        }
+    }
+    
+    private void UpdateNoteThemePreview()
+    {
+        try
+        {
+            NoteThemePreview.Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewNoteColor ?? "#FFFF99"));
+            NoteThemePreviewText.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(NewNoteTextColor ?? "#000000"));
+        }
+        catch { }
     }
 }
