@@ -74,7 +74,17 @@
                 • 이미지도 Base64로 인코딩되어 함께 저장됩니다<LineBreak/>
                 • 암호화 활성화 시 모든 데이터가 암호화되어 저장됩니다<LineBreak/>
                 • 설정 → 데이터 백업/복원에서 .jmb 파일로 내보내기/가져오기 가능<LineBreak/>
-                • 다른 PC로 데이터를 이동할 때 .jmb 파일을 사용하세요
+                • 다른 PC로 데이터를 이동할 때 .jmb 파일을 사용하세요<LineBreak/>
+                • 프로그램 설정은 settings.json에 자동 저장됩니다
+            </TextBlock>
+            
+            <TextBlock Text="모양 커스터마이징" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15">
+                • 설정 → 모양에서 배경색을 변경할 수 있습니다<LineBreak/>
+                • '색상 변경' 버튼을 클릭하면 컴러 피커가 나타납니다<LineBreak/>
+                • 선택한 색상은 즉시 적용되며 재시작 후에도 유지됩니다<LineBreak/>
+                • '기본색으로' 버튼으로 초기 설정으로 돌아갈 수 있습니다<LineBreak/>
+                • 모던한 버튼 스타일이 적용되어 있습니다 (둥근 모서리, 그림자 효과)
             </TextBlock>
             
             <TextBlock Text="단축키" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
@@ -98,6 +108,8 @@
                 ✓ 비밀번호 힌트 시스템<LineBreak/>
                 ✓ 메모 정보 확인 (생성/수정 일시, 소유자, 기기 정보)<LineBreak/>
                 ✓ 데이터 내보내기/가져오기 (.jmb)<LineBreak/>
+                ✓ 배경색 커스터마이징<LineBreak/>
+                ✓ 모던한 UI 디자인<LineBreak/>
                 ✓ 시스템 트레이 최소화<LineBreak/>
                 ✓ 자동 저장 및 복원
             </TextBlock>
