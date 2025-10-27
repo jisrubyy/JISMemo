@@ -8,22 +8,22 @@
         Title="JISMemo" Height="600" Width="800" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <Border x:Name="TitleBar" Grid.Row="0" Background="#333" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid Margin="10,5">
+        <Border x:Name="TitleBar" Grid.Row="0" Background="#1E1E1E" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid Margin="15,8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <Button x:Name="AddNoteButton" Content="+ 새 메모" Width="80" Height="30" Click="AddNoteButton_Click"/>
-                    <Button x:Name="SwitchUserButton" Content="사용자 전환" Width="90" Height="30" Margin="10,0,0,0" Click="SwitchUserButton_Click"/>
-                    <Button x:Name="SettingsButton" Content="설정" Width="50" Height="30" Margin="10,0,0,0" Click="SettingsButton_Click"/>
-                    <Button x:Name="HelpButton" Content="도움말" Width="60" Height="30" Margin="10,0,0,0" Click="HelpButton_Click"/>
-                    <Button x:Name="MinimizeButton" Content="최소화" Width="60" Height="30" Margin="10,0,0,0" Click="MinimizeButton_Click"/>
-                    <Button x:Name="ExitButton" Content="종료" Width="50" Height="30" Margin="10,0,0,0" Click="ExitButton_Click"/>
+                    <Button x:Name="AddNoteButton" Content="➕ 새 메모" Height="32" Padding="12,6" Click="AddNoteButton_Click" Style="{StaticResource SuccessButton}"/>
+                    <Button x:Name="SwitchUserButton" Content="👤 사용자 전환" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SwitchUserButton_Click"/>
+                    <Button x:Name="SettingsButton" Content="⚙️ 설정" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SettingsButton_Click"/>
+                    <Button x:Name="HelpButton" Content="❓ 도움말" Height="32" Padding="12,6" Margin="8,0,0,0" Click="HelpButton_Click"/>
+                    <Button x:Name="MinimizeButton" Content="— 최소화" Height="32" Padding="12,6" Margin="8,0,0,0" Click="MinimizeButton_Click" Style="{StaticResource SecondaryButton}"/>
+                    <Button x:Name="ExitButton" Content="✖ 종료" Height="32" Padding="12,6" Margin="8,0,0,0" Click="ExitButton_Click" Style="{StaticResource DangerButton}"/>
                 </StackPanel>
-                <TextBlock x:Name="CurrentUserText" Text="" Foreground="White" VerticalAlignment="Center" 
-                           HorizontalAlignment="Right" FontSize="14" Margin="0,0,10,0"/>
+                <TextBlock x:Name="CurrentUserText" Text="" Foreground="#E0E0E0" VerticalAlignment="Center" 
+                           HorizontalAlignment="Right" FontSize="13" Margin="0,0,15,0" FontWeight="Medium"/>
             </Grid>
         </Border>
         
