@@ -189,6 +189,8 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        e.Cancel = true;
+        Hide();
         await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
     }
 
@@ -438,15 +440,24 @@ public partial class MainWindow : Window
         // Close button removes the note
         closeButton.Click += (s, e) =>
         {
-            _notes.Remove(note);
-            NotesCanvas.Children.Remove(noteControl);
-            _noteControls.Remove(noteControl);
-            if (_minimapRects.TryGetValue(note, out var rect))
+            var result = System.Windows.MessageBox.Show(
+                "이 메모를 삭제하시겠습니까?",
+                "메모 삭제",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
             {
-                MinimapCanvas.Children.Remove(rect);
-                _minimapRects.Remove(note);
+                _notes.Remove(note);
+                NotesCanvas.Children.Remove(noteControl);
+                _noteControls.Remove(noteControl);
+                if (_minimapRects.TryGetValue(note, out var rect))
+                {
+                    MinimapCanvas.Children.Remove(rect);
+                    _minimapRects.Remove(note);
+                }
+                UpdateMinimap();
             }
-            UpdateMinimap();
         };
 
         // Header drag (drag only by header, with offset so it feels like a title bar)
@@ -526,8 +537,9 @@ public partial class MainWindow : Window
         _noteControls.Add(noteControl);
     }
 
-    private void ExitButton_Click(object sender, RoutedEventArgs e)
+    private async void ExitButton_Click(object sender, RoutedEventArgs e)
     {
+        await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
         WpfApplication.Current.Shutdown();
     }
 
