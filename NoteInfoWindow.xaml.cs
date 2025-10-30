@@ -5,10 +5,14 @@ namespace JISMemo;
 
 public partial class NoteInfoWindow : Window
 {
+    private readonly StickyNote _note;
+
     public NoteInfoWindow(StickyNote note)
     {
         InitializeComponent();
-        
+        _note = note;
+
+        TitleTextBox.Text = note.Title;
         IdText.Text = note.Id;
         CreatedAtText.Text = note.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
         ModifiedAtText.Text = note.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss");
@@ -30,6 +34,7 @@ public partial class NoteInfoWindow : Window
 
     private void OkButton_Click(object sender, RoutedEventArgs e)
     {
+        _note.Title = TitleTextBox.Text;
         Close();
     }
 }

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using JISMemo.Models;
@@ -240,12 +241,13 @@ public partial class MainWindow : Window
 
         var titleText = new System.Windows.Controls.TextBlock
         {
-            Text = Localization.Memo,
             Foreground = System.Windows.Media.Brushes.White,
             VerticalAlignment = System.Windows.VerticalAlignment.Center,
             Margin = new System.Windows.Thickness(6, 0, 0, 0),
             FontSize = 12
         };
+        var titleBinding = new System.Windows.Data.Binding("Title") { Source = note };
+        titleText.SetBinding(System.Windows.Controls.TextBlock.TextProperty, titleBinding);
 
         var infoButton = new System.Windows.Controls.Button
         {
@@ -315,7 +317,10 @@ public partial class MainWindow : Window
         };
 
         // 텍스트 변경 시 모델에 반영
-        textBox.TextChanged += (s, e) => note.Content = textBox.Text;
+        textBox.TextChanged += (s, e) => 
+        {
+            note.Content = textBox.Text;
+        };
 
         // Ctrl + 마우스 휠로 폰트 크기 확대/축소 (줌)
         textBox.PreviewMouseWheel += (s, e) =>
@@ -582,6 +587,18 @@ public partial class MainWindow : Window
     {
         var contextMenu = new System.Windows.Controls.ContextMenu();
         
+        var setTitleMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "제목 입력"
+        };
+        setTitleMenuItem.Click += (s, e) =>
+        {
+            var infoWindow = new NoteInfoWindow(note);
+            infoWindow.ShowDialog();
+        };
+        contextMenu.Items.Add(setTitleMenuItem);
+        contextMenu.Items.Add(new System.Windows.Controls.Separator());
+
         var colorMenuItem = new System.Windows.Controls.MenuItem
         {
             Header = Localization.ColorTheme
@@ -1225,4 +1242,3 @@ public partial class MainWindow : Window
     }
 
 }
-

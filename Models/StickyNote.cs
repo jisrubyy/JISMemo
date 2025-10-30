@@ -4,6 +4,7 @@ namespace JISMemo.Models;
 
 public sealed class StickyNote : INotifyPropertyChanged
 {
+    private string _title = "";
     private string _content = "";
     private double _left;
     private double _top;
@@ -20,6 +21,16 @@ public sealed class StickyNote : INotifyPropertyChanged
     public string? DeviceType { get; set; }
     public string? DeviceName { get; set; }
     
+    public string Title
+    {
+        get => string.IsNullOrEmpty(_title) ? (Content.Length > 8 ? Content.Substring(0, 8) : Content) : _title;
+        set
+        {
+            _title = value;
+            OnPropertyChanged(nameof(Title));
+        }
+    }
+
     public string Content
     {
         get => _content;
@@ -28,6 +39,7 @@ public sealed class StickyNote : INotifyPropertyChanged
             _content = value;
             ModifiedAt = DateTime.Now;
             OnPropertyChanged(nameof(Content));
+            OnPropertyChanged(nameof(Title)); // Content changes can affect the default title
         }
     }
 
