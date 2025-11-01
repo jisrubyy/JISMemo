@@ -2,7 +2,7 @@ namespace JISMemo;
 
 public static class Localization
 {
-    public static string CurrentLanguage { get; set; } = "ko";
+    public static string CurrentLanguage { get; set; } = "en";
 
     // Main Window
     public static string AddNote => CurrentLanguage == "ko" ? "➕ 새 메모" : "➕ New Note";
