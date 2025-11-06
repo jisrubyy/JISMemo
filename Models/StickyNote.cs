@@ -9,10 +9,10 @@ public sealed class StickyNote : INotifyPropertyChanged
     private double _left;
     private double _top;
     private string _color = "#FFFF99";
-    private string? _imageData;
-    private double _fontSize = 14.0; // 메모 텍스트 확대/축소(줌) 값
-    private double _width = 200;
-    private double _height = 200;
+    private List<string> _imageDataList = new();
+    private double _fontSize = 16.0; // 메모 텍스트 확대/축소(줌) 값
+    private double _width = 250;
+    private double _height = 250;
 
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -23,12 +23,19 @@ public sealed class StickyNote : INotifyPropertyChanged
     
     public string Title
     {
-        get => string.IsNullOrEmpty(_title) ? (Content.Length > 8 ? Content.Substring(0, 8) : Content) : _title;
+        get => string.IsNullOrEmpty(_title) ? GetFirstLineAsTitle() : _title;
         set
         {
             _title = value;
             OnPropertyChanged(nameof(Title));
         }
+    }
+    
+    private string GetFirstLineAsTitle()
+    {
+        if (string.IsNullOrEmpty(Content)) return "";
+        var firstLine = Content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+        return firstLine.Length > 20 ? firstLine.Substring(0, 20) + "..." : firstLine;
     }
 
     public string Content
@@ -73,13 +80,33 @@ public sealed class StickyNote : INotifyPropertyChanged
         }
     }
 
-    public string? ImageData
+    public List<string> ImageDataList
     {
-        get => _imageData;
+        get => _imageDataList;
         set
         {
-            _imageData = value;
+            _imageDataList = value ?? new();
+            OnPropertyChanged(nameof(ImageDataList));
+        }
+    }
+
+    // 기존 코드 호환성을 위한 속성
+    public string? ImageData
+    {
+        get => _imageDataList.FirstOrDefault();
+        set
+        {
+            if (value != null)
+            {
+                _imageDataList.Clear();
+                _imageDataList.Add(value);
+            }
+            else
+            {
+                _imageDataList.Clear();
+            }
             OnPropertyChanged(nameof(ImageData));
+            OnPropertyChanged(nameof(ImageDataList));
         }
     }
 

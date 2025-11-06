@@ -46,16 +46,22 @@ public partial class MainWindow : Window
         }
         
         _noteService = new NoteService(_currentUser);
+        // 기본 언어를 영문으로 설정
+        Localization.CurrentLanguage = "en";
         _appSettings = _settingsService.LoadSettings();
-        Localization.CurrentLanguage = _appSettings.Language;
+        // 설정 파일에 언어 설정이 있으면 사용
+        if (!string.IsNullOrEmpty(_appSettings.Language))
+        {
+            Localization.CurrentLanguage = _appSettings.Language;
+        }
         
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
+        UpdateUITexts();
         InitializeSystemTray();
         UpdateCurrentUserDisplay();
         ApplyBackgroundColor();
-        UpdateUITexts();
     }
     
     private void ApplyBackgroundColor()
@@ -189,7 +195,7 @@ public partial class MainWindow : Window
         UpdateMinimap();
     }
 
-    private async void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         e.Cancel = true;
         Hide();
@@ -293,12 +299,18 @@ public partial class MainWindow : Window
             infoWindow.ShowDialog();
         };
 
-        // Content area (image preview + textbox)
+        // Content area with ScrollViewer
+        var scrollViewer = new System.Windows.Controls.ScrollViewer
+        {
+            VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Disabled
+        };
         var contentPanel = new System.Windows.Controls.StackPanel();
-        System.Windows.Controls.Grid.SetRow(contentPanel, 1);
+        scrollViewer.Content = contentPanel;
+        System.Windows.Controls.Grid.SetRow(scrollViewer, 1);
 
-        // 텍스트 영역 높이(이미지 유무에 따라 조정)
-        var textHeight = string.IsNullOrEmpty(note.ImageData) ? 170 : 80;
+        // 텍스트 영역 높이 조정
+        var textHeight = Math.Max(80, 220 - note.ImageDataList.Count * 25);
 
         var textColor = (note.Color == "#4A4A4A" || note.Color == "#2C3E50") ? "#FFFFFF" : "#000000";
         
@@ -311,8 +323,7 @@ public partial class MainWindow : Window
             TextWrapping = System.Windows.TextWrapping.Wrap,
             AcceptsReturn = true,
             Margin = new System.Windows.Thickness(5, 2, 5, 5),
-            Height = textHeight,
-            VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
+            MinHeight = textHeight,
             FontSize = note.FontSize
         };
 
@@ -338,110 +349,130 @@ public partial class MainWindow : Window
             }
         };
 
-        // 이미지 붙여넣기 핸들링은 기존 로직 유지
-        System.Windows.DataObject.AddPastingHandler(textBox, (s, pastingArgs) =>
-        {
-            BitmapSource? imageSource = null;
 
-            imageSource = ExtractBitmapSourceFromDataObject(pastingArgs.DataObject);
 
-            try { LogClipboardFormats(pastingArgs.DataObject, note.Id ?? note.GetHashCode().ToString()); } catch { }
 
-            if (imageSource == null)
-            {
-                try
-                {
-                    if (System.Windows.Clipboard.ContainsImage())
-                    {
-                        imageSource = System.Windows.Clipboard.GetImage();
-                    }
-                }
-                catch { }
-            }
 
-            if (imageSource == null)
-            {
-                try { imageSource = ExtractFromWinFormsClipboard(); } catch { }
-            }
 
-            if (imageSource != null)
-            {
-                note.ImageData = ConvertImageToBase64(imageSource);
-                RefreshNoteControl(note, noteControl);
-                pastingArgs.CancelCommand();
-            }
-        });
 
+        // 이미지 붙여넣기 처리
         textBox.PreviewKeyDown += (s, ke) =>
         {
             if (ke.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
-                BitmapSource? imageSource = null;
-                try
+                if (System.Windows.Clipboard.ContainsImage())
                 {
-                    var dataObj = System.Windows.Clipboard.GetDataObject();
-                    if (dataObj != null)
+                    var image = System.Windows.Clipboard.GetImage();
+                    if (image != null)
                     {
-                        imageSource = ExtractBitmapSourceFromDataObject(dataObj);
+                        var cursorPos = textBox.CaretIndex;
+                        var beforeText = textBox.Text.Substring(0, cursorPos);
+                        var afterText = textBox.Text.Substring(cursorPos);
+                        
+                        var imageData = ConvertImageToBase64(image);
+                        var imageIndex = note.ImageDataList.Count;
+                        note.ImageDataList.Add(imageData);
+                        
+                        var imageMarker = $"[IMG{imageIndex}]";
+                        textBox.Text = beforeText + imageMarker + afterText;
+                        textBox.CaretIndex = cursorPos + imageMarker.Length;
+                        
+                        RefreshNoteControl(note, noteControl);
+                        ke.Handled = true;
                     }
-
-                    if (imageSource == null && System.Windows.Clipboard.ContainsImage())
-                    {
-                        imageSource = System.Windows.Clipboard.GetImage();
-                    }
-                }
-                catch { }
-
-                if (imageSource != null)
-                {
-                    note.ImageData = ConvertImageToBase64(imageSource);
-                    RefreshNoteControl(note, noteControl);
-                    ke.Handled = true;
                 }
             }
         };
 
-        textBox.CommandBindings.Add(new System.Windows.Input.CommandBinding(System.Windows.Input.ApplicationCommands.Paste, (s, e) =>
-        {
-            BitmapSource? imageSource = null;
-
-            try
-            {
-                var dataObj = System.Windows.Clipboard.GetDataObject();
-                if (dataObj != null)
-                {
-                    imageSource = ExtractBitmapSourceFromDataObject(dataObj);
-                }
-                try { LogClipboardFormats(dataObj, note.Id ?? note.GetHashCode().ToString()); } catch { }
-                if (imageSource == null && System.Windows.Clipboard.ContainsImage())
-                {
-                    imageSource = System.Windows.Clipboard.GetImage();
-                }
-            }
-            catch { }
-
-            if (imageSource == null)
-            {
-                try { imageSource = ExtractFromWinFormsClipboard(); } catch { }
-            }
-
-            if (imageSource != null)
-            {
-                note.ImageData = ConvertImageToBase64(imageSource);
-                RefreshNoteControl(note, noteControl);
-                e.Handled = true;
-            }
-        }));
-
         textBox.ContextMenu = CreateNoteContextMenu(note, noteControl);
 
-        // 이미지가 있으면 이미지 미리보기, 이후 텍스트 박스
-        if (!string.IsNullOrEmpty(note.ImageData))
+        // 텍스트와 이미지를 순서대로 배치
+        if (note.Content.Contains("[IMG"))
         {
-            var imageControl = CreateImageControl(note.ImageData);
-            contentPanel.Children.Add(imageControl);
+            var textParts = SplitTextByImageMarkers(note.Content);
+            
+            for (int i = 0; i < textParts.Count; i++)
+            {
+                var part = textParts[i];
+                
+                if (part.StartsWith("[IMG") && part.EndsWith("]"))
+                {
+                    var indexStr = part.Substring(4, part.Length - 5);
+                    if (int.TryParse(indexStr, out var imgIndex) && imgIndex < note.ImageDataList.Count)
+                    {
+                        var imageControl = CreateImageControl(note.ImageDataList[imgIndex], note, noteControl, imgIndex);
+                        contentPanel.Children.Add(imageControl);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(part))
+                {
+                    var partTextBox = CreateTextBoxPart(part, note, textColor);
+                    contentPanel.Children.Add(partTextBox);
+                }
+            }
+            
+            // 마커가 있을 때는 편집용 텍스트박스를 마지막에 추가
+            var editTextBox = new System.Windows.Controls.TextBox
+            {
+                Text = "",
+                Background = System.Windows.Media.Brushes.Transparent,
+                Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(textColor)),
+                BorderThickness = new System.Windows.Thickness(0),
+                TextWrapping = System.Windows.TextWrapping.Wrap,
+                AcceptsReturn = true,
+                Margin = new System.Windows.Thickness(5, 2, 5, 5),
+                MinHeight = 40,
+                FontSize = note.FontSize
+            };
+            
+
+            
+            // 편집용 텍스트박스에도 이미지 붙여넣기 기능 추가
+            editTextBox.PreviewKeyDown += (s, ke) =>
+            {
+                if (ke.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                {
+                    if (System.Windows.Clipboard.ContainsImage())
+                    {
+                        var image = System.Windows.Clipboard.GetImage();
+                        if (image != null)
+                        {
+                            // 현재 편집 중인 텍스트를 메인 컨텐트에 추가
+                            if (!string.IsNullOrEmpty(editTextBox.Text))
+                            {
+                                note.Content += editTextBox.Text;
+                            }
+                            
+                            var imageData = ConvertImageToBase64(image);
+                            var imageIndex = note.ImageDataList.Count;
+                            note.ImageDataList.Add(imageData);
+                            
+                            var imageMarker = $"[IMG{imageIndex}]";
+                            note.Content += imageMarker;
+                            
+                            RefreshNoteControl(note, noteControl);
+                            ke.Handled = true;
+                        }
+                    }
+                }
+            };
+            
+            // 편집용 텍스트박스에서 포커스를 잃을 때 텍스트를 메인 컨텐트에 추가
+            editTextBox.LostFocus += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(editTextBox.Text))
+                {
+                    note.Content += editTextBox.Text;
+                    editTextBox.Text = "";
+                }
+            };
+            
+            contentPanel.Children.Add(editTextBox);
         }
-        contentPanel.Children.Add(textBox);
+        else
+        {
+            contentPanel.Children.Add(textBox);
+        }
 
         // Close button removes the note
         closeButton.Click += (s, e) =>
@@ -521,8 +552,8 @@ public partial class MainWindow : Window
                 var pos = e.GetPosition(NotesCanvas);
                 var newWidth = startWidth + (pos.X - resizeStart.X);
                 var newHeight = startHeight + (pos.Y - resizeStart.Y);
-                if (newWidth > 150) { noteControl.Width = newWidth; note.Width = newWidth; }
-                if (newHeight > 100) { noteControl.Height = newHeight; note.Height = newHeight; }
+                if (newWidth > 200) { noteControl.Width = newWidth; note.Width = newWidth; }
+                if (newHeight > 150) { noteControl.Height = newHeight; note.Height = newHeight; }
             }
         };
         resizeHandle.MouseLeftButtonUp += (s, e) =>
@@ -532,7 +563,7 @@ public partial class MainWindow : Window
 
         // Assemble
         rootGrid.Children.Add(headerGrid);
-        rootGrid.Children.Add(contentPanel);
+        rootGrid.Children.Add(scrollViewer);
         rootGrid.Children.Add(resizeHandle);
         noteControl.Child = rootGrid;
 
@@ -558,7 +589,7 @@ public partial class MainWindow : Window
         return Convert.ToBase64String(stream.ToArray());
     }
 
-    private System.Windows.Controls.Image CreateImageControl(string base64Data)
+    private System.Windows.Controls.Image CreateImageControl(string base64Data, StickyNote note, System.Windows.Controls.Border noteControl, int imageIndex = -1)
     {
         var bytes = Convert.FromBase64String(base64Data);
         var bitmap = new BitmapImage();
@@ -566,12 +597,85 @@ public partial class MainWindow : Window
         bitmap.StreamSource = new MemoryStream(bytes);
         bitmap.EndInit();
         
-        return new System.Windows.Controls.Image
+        var image = new System.Windows.Controls.Image
         {
             Source = bitmap,
             MaxHeight = 100,
             Margin = new System.Windows.Thickness(5, 0, 5, 5),
             Stretch = System.Windows.Media.Stretch.Uniform
+        };
+        
+        // 이미지에 우클릭 컨텍스트 메뉴 추가
+        var contextMenu = new System.Windows.Controls.ContextMenu();
+        var deleteMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "이 이미지 삭제"
+        };
+        deleteMenuItem.Click += (s, e) =>
+        {
+            if (imageIndex >= 0)
+            {
+                var marker = $"[IMG{imageIndex}]";
+                note.Content = note.Content.Replace(marker, "");
+            }
+            note.ImageDataList.Remove(base64Data);
+            RefreshNoteControl(note, noteControl);
+        };
+        contextMenu.Items.Add(deleteMenuItem);
+        image.ContextMenu = contextMenu;
+        
+        return image;
+    }
+
+    private List<string> SplitTextByImageMarkers(string text)
+    {
+        var parts = new List<string>();
+        var currentPos = 0;
+        
+        while (currentPos < text.Length)
+        {
+            var nextMarker = text.IndexOf("[IMG", currentPos);
+            if (nextMarker == -1)
+            {
+                if (currentPos < text.Length)
+                {
+                    parts.Add(text.Substring(currentPos));
+                }
+                break;
+            }
+            
+            if (nextMarker > currentPos)
+            {
+                parts.Add(text.Substring(currentPos, nextMarker - currentPos));
+            }
+            
+            var markerEnd = text.IndexOf("]", nextMarker);
+            if (markerEnd != -1)
+            {
+                parts.Add(text.Substring(nextMarker, markerEnd - nextMarker + 1));
+                currentPos = markerEnd + 1;
+            }
+            else
+            {
+                currentPos = nextMarker + 1;
+            }
+        }
+        
+        return parts;
+    }
+    
+    private System.Windows.Controls.TextBox CreateTextBoxPart(string text, StickyNote note, string textColor)
+    {
+        return new System.Windows.Controls.TextBox
+        {
+            Text = text,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(textColor)),
+            BorderThickness = new System.Windows.Thickness(0),
+            TextWrapping = System.Windows.TextWrapping.Wrap,
+            IsReadOnly = true,
+            Margin = new System.Windows.Thickness(5, 2, 5, 2),
+            FontSize = note.FontSize
         };
     }
 
@@ -597,6 +701,22 @@ public partial class MainWindow : Window
             infoWindow.ShowDialog();
         };
         contextMenu.Items.Add(setTitleMenuItem);
+        
+        // 모든 이미지 삭제 메뉴 (이미지가 있을 때만 표시)
+        if (note.ImageDataList.Count > 0)
+        {
+            var removeAllImagesMenuItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "모든 이미지 삭제"
+            };
+            removeAllImagesMenuItem.Click += (s, e) =>
+            {
+                note.ImageDataList.Clear();
+                RefreshNoteControl(note, noteControl);
+            };
+            contextMenu.Items.Add(removeAllImagesMenuItem);
+        }
+        
         contextMenu.Items.Add(new System.Windows.Controls.Separator());
 
         var colorMenuItem = new System.Windows.Controls.MenuItem
