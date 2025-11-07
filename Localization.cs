@@ -148,6 +148,9 @@ Using Images
     public static string DeviceType => CurrentLanguage == "ko" ? "기기 유형:" : "Device Type:";
     public static string DeviceName => CurrentLanguage == "ko" ? "기기 이름:" : "Device Name:";
     
+    // Status Bar
+    public static string LastModified => CurrentLanguage == "ko" ? "최종 수정:" : "Last Modified:";
+    
     // User Selection Window
     public static string SelectUser => CurrentLanguage == "ko" ? "사용자 선택" : "Select User";
     public static string SelectOrCreateUser => CurrentLanguage == "ko" ? "사용자를 선택하거나 새로 만드세요:" : "Select or create a user:";

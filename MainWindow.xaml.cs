@@ -231,10 +231,11 @@ public partial class MainWindow : Window
             BorderThickness = new System.Windows.Thickness(1)
         };
 
-        // Root grid with a header ("창틀") and content area
+        // Root grid with a header ("창틀"), content area, and status bar
         var rootGrid = new System.Windows.Controls.Grid();
         rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(24) });
         rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+        rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(20) });
 
         // Header bar (title bar for the note)
         var headerGrid = new System.Windows.Controls.Grid
@@ -561,9 +562,34 @@ public partial class MainWindow : Window
             resizeHandle.ReleaseMouseCapture();
         };
 
+        // Status bar at the bottom
+        var statusBar = new System.Windows.Controls.Border
+        {
+            Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 240)),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(200, 200, 200)),
+            BorderThickness = new System.Windows.Thickness(0, 1, 0, 0)
+        };
+        var statusText = new System.Windows.Controls.TextBlock
+        {
+            Text = $"{Localization.LastModified} {note.ModifiedAt:yyyy-MM-dd HH:mm:ss}",
+            FontSize = 10,
+            Foreground = System.Windows.Media.Brushes.Gray,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Margin = new System.Windows.Thickness(5, 0, 5, 0)
+        };
+        statusBar.Child = statusText;
+        System.Windows.Controls.Grid.SetRow(statusBar, 2);
+
+        // Update status bar when content changes
+        textBox.TextChanged += (s, e) => 
+        {
+            statusText.Text = $"{Localization.LastModified} {note.ModifiedAt:yyyy-MM-dd HH:mm:ss}";
+        };
+
         // Assemble
         rootGrid.Children.Add(headerGrid);
         rootGrid.Children.Add(scrollViewer);
+        rootGrid.Children.Add(statusBar);
         rootGrid.Children.Add(resizeHandle);
         noteControl.Child = rootGrid;
 
