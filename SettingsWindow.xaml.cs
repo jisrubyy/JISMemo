@@ -220,7 +220,7 @@ public partial class SettingsWindow : Window
             try
             {
                 Directory.CreateDirectory(CustomPathTextBox.Text);
-                SelectedPath = Path.Combine(CustomPathTextBox.Text, "JISMemo");
+                SelectedPath = CustomPathTextBox.Text;
             }
             catch
             {
@@ -273,93 +273,161 @@ public partial class SettingsWindow : Window
     
     private async void ExportButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog
+        try
         {
-            Filter = "JISMemo 백업 파일 (*.jmb)|*.jmb",
-            FileName = $"JISMemo_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.jmb"
-        };
-        
-        if (dialog.ShowDialog() == true)
-        {
-            try
+            var userService = new UserService();
+            var currentUser = userService.GetCurrentUser() ?? "Default";
+            var dataPath = _noteService.GetCurrentDataPath();
+            
+            if (!File.Exists(dataPath))
             {
-                var userService = new UserService();
-                var currentUser = userService.GetCurrentUser() ?? "";
-                
-                var backup = new UserBackup
+                MessageBox.Show("내보낼 데이터가 없습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
+            var notesJson = await File.ReadAllTextAsync(dataPath);
+            List<StickyNote> notes;
+            
+            if (_noteService.IsEncryptionEnabled())
+            {
+                var passwordWindow = new PasswordWindow(_noteService.GetPasswordHint());
+                if (passwordWindow.ShowDialog() != true) return;
+                if (!_noteService.VerifyPassword(passwordWindow.Password))
                 {
-                    Username = currentUser,
-                    Notes = await _noteService.LoadNotesAsync(null),
-                    PasswordHash = _noteService.GetPasswordHash(),
-                    PasswordHint = _noteService.GetPasswordHint(),
-                    EncryptionEnabled = _noteService.IsEncryptionEnabled()
-                };
-                
+                    MessageBox.Show("비밀번호가 올바르지 않습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                var decrypted = EncryptionService.Decrypt(notesJson, passwordWindow.Password);
+                notes = JsonSerializer.Deserialize<List<StickyNote>>(decrypted) ?? new();
+            }
+            else
+            {
+                notes = JsonSerializer.Deserialize<List<StickyNote>>(notesJson) ?? new();
+            }
+            
+            var dialog = new SaveFileDialog
+            {
+                Filter = "JISMemo 백업 (*.jmb)|*.jmb",
+                FileName = $"JISMemo_{currentUser}_{DateTime.Now:yyyyMMdd_HHmmss}.jmb"
+            };
+            
+            if (dialog.ShowDialog() == true)
+            {
+                var backup = new UserBackup { Username = currentUser, Notes = notes };
                 var json = JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true });
                 await File.WriteAllTextAsync(dialog.FileName, json);
-                
-                MessageBox.Show("데이터가 내보내기 되었습니다.", "성공", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{notes.Count}개 메모 내보내기 완료", "성공", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"내보내기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"내보내기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     
     private async void ImportButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "JISMemo 백업 파일 (*.jmb)|*.jmb"
-        };
+        var dialog = new OpenFileDialog { Filter = "JISMemo 백업 (*.jmb)|*.jmb" };
+        if (dialog.ShowDialog() != true) return;
         
-        if (dialog.ShowDialog() == true)
+        try
         {
-            try
+            var json = await File.ReadAllTextAsync(dialog.FileName);
+            var backup = JsonSerializer.Deserialize<UserBackup>(json);
+            if (backup?.Notes == null)
             {
-                var json = await File.ReadAllTextAsync(dialog.FileName);
-                var backup = JsonSerializer.Deserialize<UserBackup>(json);
-                
-                if (backup == null)
-                {
-                    MessageBox.Show("잘못된 백업 파일입니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                
-                var userService = new UserService();
-                var users = userService.GetAllUsers();
-                
-                if (users.Any(u => u.Username == backup.Username))
-                {
-                    var result = MessageBox.Show(
-                        $"사용자 '{backup.Username}'이(가) 이미 존재합니다.\n덮어쓰시겠습니까?",
-                        "확인",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
-                    
-                    if (result != MessageBoxResult.Yes)
-                        return;
-                }
-                else
-                {
-                    userService.AddUser(backup.Username);
-                }
-                
-                var tempService = new NoteService(backup.Username);
-                await tempService.SaveNotesAsync(backup.Notes, null);
-                tempService.RestoreEncryptionSettings(backup.PasswordHash, backup.PasswordHint, backup.EncryptionEnabled);
-                
-                MessageBox.Show(
-                    $"사용자 '{backup.Username}'의 데이터가 가져오기 되었습니다.\n사용자 전환으로 확인하세요.",
-                    "성공",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                MessageBox.Show("잘못된 백업 파일", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
-            catch (Exception ex)
+            
+            var userService = new UserService();
+            var existingUsers = string.Join(", ", userService.GetAllUsers().Select(u => u.Username));
+            
+            var inputWindow = new System.Windows.Window
             {
-                MessageBox.Show($"가져오기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                Title = "사용자 이름",
+                Width = 450,
+                Height = 280,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this
+            };
+            
+            var grid = new System.Windows.Controls.Grid { Margin = new Thickness(20) };
+            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = GridLength.Auto });
+            
+            var label = new System.Windows.Controls.TextBlock
+            {
+                Text = $"백업: {backup.Username}\n가져올 사용자 이름:",
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            System.Windows.Controls.Grid.SetRow(label, 0);
+            
+            var textBox = new System.Windows.Controls.TextBox
+            {
+                Text = backup.Username,
+                Margin = new Thickness(0, 0, 0, 10),
+                Height = 30
+            };
+            System.Windows.Controls.Grid.SetRow(textBox, 1);
+            
+            var existingLabel = new System.Windows.Controls.TextBlock
+            {
+                Text = $"기존 사용자: {existingUsers}",
+                Foreground = System.Windows.Media.Brushes.Black,
+                FontSize = 13,
+                Margin = new Thickness(0, 0, 0, 15),
+                TextWrapping = System.Windows.TextWrapping.Wrap
+            };
+            System.Windows.Controls.Grid.SetRow(existingLabel, 2);
+            
+            var panel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+            };
+            System.Windows.Controls.Grid.SetRow(panel, 3);
+            
+            var okBtn = new System.Windows.Controls.Button { Content = "확인", Width = 80, Margin = new Thickness(0, 0, 10, 0) };
+            okBtn.Click += (s, ev) => { inputWindow.DialogResult = true; inputWindow.Close(); };
+            var cancelBtn = new System.Windows.Controls.Button { Content = "취소", Width = 80 };
+            cancelBtn.Click += (s, ev) => { inputWindow.Close(); };
+            
+            panel.Children.Add(okBtn);
+            panel.Children.Add(cancelBtn);
+            grid.Children.Add(label);
+            grid.Children.Add(textBox);
+            grid.Children.Add(existingLabel);
+            grid.Children.Add(panel);
+            inputWindow.Content = grid;
+            
+            if (inputWindow.ShowDialog() != true || string.IsNullOrWhiteSpace(textBox.Text)) return;
+            
+            var targetUser = textBox.Text.Trim();
+            
+            if (userService.GetAllUsers().Any(u => u.Username == targetUser))
+            {
+                MessageBox.Show($"'{targetUser}' 사용자가 이미 존재합니다.\n다른 이름을 사용하세요.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
+            
+            userService.AddUser(targetUser);
+            
+            var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JISMemo");
+            Directory.CreateDirectory(appData);
+            var targetPath = Path.Combine(appData, $"notes_{targetUser}.json");
+            
+            var notesJson = JsonSerializer.Serialize(backup.Notes, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(targetPath, notesJson);
+            userService.SetCurrentUser(targetUser);
+            
+            MessageBox.Show($"{backup.Notes.Count}개 메모 가져오기 완료\n재시작 후 '{targetUser}'로 자동 로그인", "성공", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"가져오기 실패: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     

@@ -899,6 +899,8 @@ public partial class MainWindow : Window
 
     private async void ShowSettings()
     {
+        await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+        
         var settingsWindow = new SettingsWindow(_noteService.GetCurrentDataPath(), _noteService.IsUsingCustomPath(), _noteService, 
             _appSettings.BackgroundColor, _appSettings.DefaultNoteColor, _appSettings.DefaultNoteTextColor);
         if (settingsWindow.ShowDialog() == true)
@@ -908,27 +910,27 @@ public partial class MainWindow : Window
                 await _noteService.SaveNotesAsync(_notes.ToList(), null);
                 _currentPassword = null;
             }
-            else
+            
+            if (settingsWindow.SelectedPath != null)
             {
                 await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+                _noteService.SetDataPath(settingsWindow.SelectedPath);
+                
+                foreach (var control in _noteControls.ToList())
+                {
+                    NotesCanvas.Children.Remove(control);
+                }
+                _noteControls.Clear();
+                _notes.Clear();
+                
+                var notes = await _noteService.LoadNotesAsync(_currentPassword);
+                foreach (var note in notes)
+                {
+                    _notes.Add(note);
+                    CreateNoteControl(note);
+                }
+                UpdateMinimap();
             }
-            
-            _noteService.SetDataPath(settingsWindow.SelectedPath);
-            
-            foreach (var control in _noteControls.ToList())
-            {
-                NotesCanvas.Children.Remove(control);
-            }
-            _noteControls.Clear();
-            _notes.Clear();
-            
-            var notes = await _noteService.LoadNotesAsync(_currentPassword);
-            foreach (var note in notes)
-            {
-                _notes.Add(note);
-                CreateNoteControl(note);
-            }
-            UpdateMinimap();
             
             if (settingsWindow.ColorChanged)
             {
@@ -961,10 +963,7 @@ public partial class MainWindow : Window
                     Localization.Information,
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
-                return;
             }
-            
-            System.Windows.MessageBox.Show("설정이 저장되고 새 위치에서 메모를 불러왔습니다.", "설정 완료", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

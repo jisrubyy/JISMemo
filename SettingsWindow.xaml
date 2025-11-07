@@ -1,8 +1,8 @@
 <Window x:Class="JISMemo.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="JISMemo 설정" Height="450" Width="600" 
-        WindowStartupLocation="CenterScreen" ResizeMode="CanResize" MinHeight="400" MinWidth="600">
+        Title="JISMemo 설정" Height="600" Width="700" 
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize" MinHeight="600" MinWidth="700">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -84,9 +84,9 @@
                     <StackPanel Margin="10">
                         <TextBlock Text="다른 PC에서 사용하려면 데이터를 내보내세요." TextWrapping="Wrap" Margin="0,0,0,10"/>
                         <StackPanel Orientation="Horizontal">
-                            <Button x:Name="ExportButton" Content="데이터 내보내기" Width="140" Height="35" 
+                            <Button x:Name="ExportButton" Content="데이터 내보내기" Width="130" Height="35" 
                                   Margin="0,0,10,0" Click="ExportButton_Click"/>
-                            <Button x:Name="ImportButton" Content="데이터 가져오기" Width="140" Height="35" 
+                            <Button x:Name="ImportButton" Content="데이터 가져오기" Width="130" Height="35" 
                                   Click="ImportButton_Click"/>
                         </StackPanel>
                     </StackPanel>
