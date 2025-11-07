@@ -25,11 +25,11 @@
         <AssemblyDescription>포스트잇 스타일 메모 애플리케이션</AssemblyDescription>
         <AssemblyCompany>JIS</AssemblyCompany>
         <AssemblyProduct>JISMemo</AssemblyProduct>
-        <AssemblyVersion>1.3</AssemblyVersion>
-        <FileVersion>1.3</FileVersion>
+        <AssemblyVersion>1.4</AssemblyVersion>
+        <FileVersion>1.4</FileVersion>
         <ApplicationIcon>Resources\JISMemo_Icon.ico</ApplicationIcon>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>TeamJistory.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>Jisrubyy.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <!-- Release-specific tweaks to keep output to a single EXE (no PDB) -->

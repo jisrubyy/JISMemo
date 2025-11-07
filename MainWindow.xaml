@@ -7,16 +7,19 @@
         mc:Ignorable="d"
         Title="JISMemo" Height="600" Width="1000" WindowStartupLocation="CenterScreen"
         Icon="/Resources/JISMemo_Icon.ico">
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         
         <Border x:Name="TitleBar" Grid.Row="0" Background="#1E1E1E" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid Margin="15,8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                     <Button x:Name="AddNoteButton" Content="➕ 새 메모" Height="32" Padding="12,6" Click="AddNoteButton_Click" Style="{StaticResource SuccessButton}"/>
+                    <Button x:Name="FindNotesButton" Content="🔍 메모 찾기" Height="32" Padding="12,6" Margin="8,0,0,0" Click="FindNotesButton_Click"/>
+                    <Button x:Name="ArrangeNotesButton" Content="📐 메모 정렬" Height="32" Padding="12,6" Margin="8,0,0,0" Click="ArrangeNotesButton_Click"/>
                     <Button x:Name="SwitchUserButton" Content="👤 사용자 전환" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SwitchUserButton_Click"/>
                     <Button x:Name="SettingsButton" Content="⚙️ 설정" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SettingsButton_Click"/>
                     <Button x:Name="HelpButton" Content="❓ 도움말" Height="32" Padding="12,6" Margin="8,0,0,0" Click="HelpButton_Click"/>
@@ -38,6 +41,19 @@
             <Canvas x:Name="MinimapCanvas" MouseLeftButtonDown="MinimapCanvas_MouseLeftButtonDown" MouseMove="MinimapCanvas_MouseMove" MouseLeftButtonUp="MinimapCanvas_MouseLeftButtonUp">
                 <Rectangle x:Name="ViewportRect" Stroke="Red" StrokeThickness="2" Fill="#30FF0000"/>
             </Canvas>
+        </Border>
+        
+        <Border Grid.Row="2" Background="#2C2C2C" BorderBrush="#444" BorderThickness="0,1,0,0">
+            <Grid Margin="10,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock x:Name="UIScaleLabel" Text="UI 크기:" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Slider x:Name="UIScaleSlider" Width="150" Minimum="0.8" Maximum="1.5" Value="1.0" 
+                            TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                            ValueChanged="UIScaleSlider_ValueChanged"/>
+                    <TextBlock x:Name="UIScaleValue" Text="100%" Foreground="#E0E0E0" VerticalAlignment="Center" 
+                               Margin="8,0,0,0" Width="45" TextAlignment="Right"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

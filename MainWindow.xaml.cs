@@ -85,12 +85,15 @@ public partial class MainWindow : Window
     private void UpdateUITexts()
     {
         AddNoteButton.Content = Localization.AddNote;
+        FindNotesButton.Content = Localization.FindNotes;
+        ArrangeNotesButton.Content = Localization.ArrangeNotes;
         SwitchUserButton.Content = Localization.SwitchUser;
         SettingsButton.Content = Localization.Settings;
         HelpButton.Content = Localization.Help;
         CreditButton.Content = Localization.Credit;
         MinimizeButton.Content = Localization.Minimize;
         ExitButton.Content = Localization.Exit;
+        UIScaleLabel.Text = Localization.UIScale;
         UpdateCurrentUserDisplay();
     }
 
@@ -986,6 +989,68 @@ public partial class MainWindow : Window
         SwitchUser();
     }
 
+    private void FindNotesButton_Click(object sender, RoutedEventArgs e)
+    {
+        var searchWindow = new NoteSearchWindow(_notes, note =>
+        {
+            var noteControl = _noteControls[_notes.IndexOf(note)];
+            MainScrollViewer.ScrollToHorizontalOffset(note.Left - 100);
+            MainScrollViewer.ScrollToVerticalOffset(note.Top - 100);
+            HighlightNote(noteControl);
+        });
+        searchWindow.ShowDialog();
+    }
+
+    private async void HighlightNote(System.Windows.Controls.Border noteControl)
+    {
+        var originalBrush = noteControl.BorderBrush;
+        var originalThickness = noteControl.BorderThickness;
+        
+        noteControl.BorderBrush = System.Windows.Media.Brushes.Red;
+        noteControl.BorderThickness = new System.Windows.Thickness(3);
+        
+        await System.Threading.Tasks.Task.Delay(1000);
+        
+        noteControl.BorderBrush = originalBrush;
+        noteControl.BorderThickness = originalThickness;
+    }
+
+    private void ArrangeNotesButton_Click(object sender, RoutedEventArgs e)
+    {
+        const double startX = 50;
+        const double startY = 50;
+        const double spacing = 20;
+        
+        var availableWidth = MainScrollViewer.ViewportWidth - startX - 50;
+        
+        double currentX = startX;
+        double currentY = startY;
+        double rowHeight = 0;
+        
+        for (int i = 0; i < _notes.Count; i++)
+        {
+            var note = _notes[i];
+            
+            if (currentX > startX && currentX + note.Width > availableWidth)
+            {
+                currentX = startX;
+                currentY += rowHeight + spacing;
+                rowHeight = 0;
+            }
+            
+            note.Left = currentX;
+            note.Top = currentY;
+            
+            var noteControl = _noteControls[i];
+            System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
+            System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
+            UpdateMinimapRect(note);
+            
+            currentX += note.Width + spacing;
+            rowHeight = Math.Max(rowHeight, note.Height);
+        }
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _notifyIcon?.Dispose();
@@ -1385,6 +1450,16 @@ public partial class MainWindow : Window
     private void MinimapCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         MinimapCanvas.ReleaseMouseCapture();
+    }
+
+    private void UIScaleSlider_ValueChanged(object sender, RoutedEventArgs e)
+    {
+        if (UIScaleValue == null || RootGrid == null) return;
+        
+        var scale = UIScaleSlider.Value;
+        UIScaleValue.Text = $"{(int)(scale * 100)}%";
+        
+        RootGrid.LayoutTransform = new System.Windows.Media.ScaleTransform(scale, scale);
     }
 
 }

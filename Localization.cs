@@ -6,6 +6,8 @@ public static class Localization
 
     // Main Window
     public static string AddNote => CurrentLanguage == "ko" ? "➕ 새 메모" : "➕ New Note";
+    public static string FindNotes => CurrentLanguage == "ko" ? "🔍 메모 찾기" : "🔍 Find Notes";
+    public static string ArrangeNotes => CurrentLanguage == "ko" ? "📐 메모 정렬" : "📐 Arrange Notes";
     public static string SwitchUser => CurrentLanguage == "ko" ? "👤 사용자 전환" : "👤 Switch User";
     public static string Settings => CurrentLanguage == "ko" ? "⚙️ 설정" : "⚙️ Settings";
     public static string Help => CurrentLanguage == "ko" ? "❓ 도움말" : "❓ Help";
@@ -94,15 +96,30 @@ public static class Localization
 • 메모 우클릭 → 색상 테마: 8가지 색상 중 선택
 • 메모 상단 'ℹ' 버튼: 생성/수정 일시, 소유자, 기기 정보 확인
 • 메모 상단 'X' 버튼: 메모 삭제 (확인 후 삭제)
+• 메모 하단 상태바: 최종 수정 일시 표시
 • Ctrl + 마우스 휠: 폰트 크기 조절 (8~48pt)
 • 모든 변경사항은 자동으로 저장됩니다
+
+메모 찾기 및 정리
+
+• 🔍 메모 찾기: 제목이나 내용으로 메모 검색
+  - 검색창에 키워드 입력하여 실시간 필터링
+  - 메모 더블클릭으로 해당 메모로 이동
+• 📐 메모 정렬: 모든 메모를 자동으로 정리
+  - 현재 창 크기에 맞춰 깔끔하게 배치
+  - 메모 크기를 고려하여 겹치지 않게 정렬
 
 이미지 사용하기
 
 1. 스크린샷 캡처 (Win+Shift+S) 또는 이미지 복사 (Ctrl+C)
 2. 메모의 텍스트 영역 클릭
 3. Ctrl+V로 붙여넣기
-💡 팁: 이미지는 메모 상단에 표시되고, 텍스트는 하단에 표시됩니다";
+💡 팁: 이미지는 메모 상단에 표시되고, 텍스트는 하단에 표시됩니다
+
+UI 크기 조절
+
+• 하단 상태바의 슬라이더로 UI 크기 조절 (80% ~ 150%)
+• 시력이 안 좋은 경우 확대하여 사용 가능";
     }
     
     private static string GetEnglishHelp()
@@ -120,15 +137,30 @@ Note Management
 • Right-click note → Color Theme: Choose from 8 colors
 • Note header 'ℹ' button: View creation/modification time, owner, device info
 • Note header 'X' button: Delete note (with confirmation)
+• Note bottom status bar: Shows last modified time
 • Ctrl + Mouse Wheel: Adjust font size (8~48pt)
 • All changes are automatically saved
+
+Finding and Organizing Notes
+
+• 🔍 Find Notes: Search notes by title or content
+  - Type keywords for real-time filtering
+  - Double-click a note to navigate to it
+• 📐 Arrange Notes: Auto-organize all notes
+  - Arranges notes neatly based on current window size
+  - Considers note sizes to prevent overlapping
 
 Using Images
 
 1. Capture screenshot (Win+Shift+S) or copy image (Ctrl+C)
 2. Click in the note's text area
 3. Paste with Ctrl+V
-💡 Tip: Images appear at the top of the note, text at the bottom";
+💡 Tip: Images appear at the top of the note, text at the bottom
+
+UI Scaling
+
+• Use the slider in the bottom status bar to adjust UI size (80% ~ 150%)
+• Enlarge for better visibility if needed";
     }
     
     // Password Windows
@@ -150,6 +182,13 @@ Using Images
     
     // Status Bar
     public static string LastModified => CurrentLanguage == "ko" ? "최종 수정:" : "Last Modified:";
+    public static string UIScale => CurrentLanguage == "ko" ? "UI 크기:" : "UI Scale:";
+    
+    // Note Search Window
+    public static string SearchNotes => CurrentLanguage == "ko" ? "메모 검색" : "Search Notes";
+    public static string SearchPlaceholder => CurrentLanguage == "ko" ? "메모 제목이나 내용으로 검색..." : "Search by title or content...";
+    public static string NotesFound => CurrentLanguage == "ko" ? "개의 메모" : "notes found";
+    public static string GoToNote => CurrentLanguage == "ko" ? "이동" : "Go To";
     
     // User Selection Window
     public static string SelectUser => CurrentLanguage == "ko" ? "사용자 선택" : "Select User";
