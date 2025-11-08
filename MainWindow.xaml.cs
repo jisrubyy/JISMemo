@@ -316,7 +316,7 @@ public partial class MainWindow : Window
         // 텍스트 영역 높이 조정
         var textHeight = Math.Max(80, 220 - note.ImageDataList.Count * 25);
 
-        var textColor = (note.Color == "#4A4A4A" || note.Color == "#2C3E50") ? "#FFFFFF" : "#000000";
+        var textColor = GetContrastingTextColor(note.Color);
         
         var textBox = new System.Windows.Controls.TextBox
         {
@@ -755,14 +755,14 @@ public partial class MainWindow : Window
         
         var themes = new[]
         {
-            new { Name = Localization.ClassicYellow, BgColor = "#FFFF99", TextColor = "#000000" },
-            new { Name = Localization.PastelPink, BgColor = "#FFB3D9", TextColor = "#000000" },
-            new { Name = Localization.MintGreen, BgColor = "#B3FFB3", TextColor = "#000000" },
-            new { Name = Localization.SkyBlue, BgColor = "#B3E5FF", TextColor = "#000000" },
-            new { Name = Localization.Lavender, BgColor = "#E6B3FF", TextColor = "#000000" },
-            new { Name = Localization.Peach, BgColor = "#FFD9B3", TextColor = "#000000" },
-            new { Name = Localization.DarkGray, BgColor = "#4A4A4A", TextColor = "#FFFFFF" },
-            new { Name = Localization.NavyBlue, BgColor = "#2C3E50", TextColor = "#FFFFFF" }
+            new { Name = Localization.ClassicYellow, BgColor = "#FFFF99" },
+            new { Name = Localization.PastelPink, BgColor = "#FFB3D9" },
+            new { Name = Localization.MintGreen, BgColor = "#B3FFB3" },
+            new { Name = Localization.SkyBlue, BgColor = "#B3E5FF" },
+            new { Name = Localization.Lavender, BgColor = "#E6B3FF" },
+            new { Name = Localization.Peach, BgColor = "#FFD9B3" },
+            new { Name = Localization.DarkGray, BgColor = "#4A4A4A" },
+            new { Name = Localization.NavyBlue, BgColor = "#2C3E50" }
         };
         
         foreach (var theme in themes)
@@ -774,7 +774,8 @@ public partial class MainWindow : Window
             themeItem.Click += (s, e) =>
             {
                 note.Color = theme.BgColor;
-                ApplyNoteTheme(noteControl, theme.BgColor, theme.TextColor);
+                var textColor = GetContrastingTextColor(theme.BgColor);
+                ApplyNoteTheme(noteControl, theme.BgColor, textColor);
             };
             colorMenuItem.Items.Add(themeItem);
         }
@@ -821,7 +822,7 @@ public partial class MainWindow : Window
         {
             foreach (var child in grid.Children)
             {
-                if (child is System.Windows.Controls.StackPanel contentPanel)
+                if (child is System.Windows.Controls.ScrollViewer scrollViewer && scrollViewer.Content is System.Windows.Controls.StackPanel contentPanel)
                 {
                     foreach (var item in contentPanel.Children)
                     {
@@ -1459,6 +1460,20 @@ public partial class MainWindow : Window
         UIScaleValue.Text = $"{(int)(scale * 100)}%";
         
         RootGrid.LayoutTransform = new System.Windows.Media.ScaleTransform(scale, scale);
+    }
+
+    private string GetContrastingTextColor(string bgColorHex)
+    {
+        try
+        {
+            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(bgColorHex);
+            var luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
+            return luminance > 0.5 ? "#000000" : "#FFFFFF";
+        }
+        catch
+        {
+            return "#000000";
+        }
     }
 
 }
