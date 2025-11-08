@@ -9,26 +9,38 @@
         Icon="/Resources/JISMemo_Icon.ico">
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="80"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         
         <Border x:Name="TitleBar" Grid.Row="0" Background="#1E1E1E" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid Margin="15,8">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <Button x:Name="AddNoteButton" Content="➕ 새 메모" Height="32" Padding="12,6" Click="AddNoteButton_Click" Style="{StaticResource SuccessButton}"/>
-                    <Button x:Name="FindNotesButton" Content="🔍 메모 찾기" Height="32" Padding="12,6" Margin="8,0,0,0" Click="FindNotesButton_Click"/>
-                    <Button x:Name="ArrangeNotesButton" Content="📐 메모 정렬" Height="32" Padding="12,6" Margin="8,0,0,0" Click="ArrangeNotesButton_Click"/>
-                    <Button x:Name="SwitchUserButton" Content="👤 사용자 전환" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SwitchUserButton_Click"/>
-                    <Button x:Name="SettingsButton" Content="⚙️ 설정" Height="32" Padding="12,6" Margin="8,0,0,0" Click="SettingsButton_Click"/>
-                    <Button x:Name="HelpButton" Content="❓ 도움말" Height="32" Padding="12,6" Margin="8,0,0,0" Click="HelpButton_Click"/>
-                    <Button x:Name="CreditButton" Content="📜 제작자 정보" Height="32" Padding="12,6" Margin="8,0,0,0" Click="CreditButton_Click"/>
-                    <Button x:Name="MinimizeButton" Content="— 최소화" Height="32" Padding="12,6" Margin="8,0,0,0" Click="MinimizeButton_Click" Style="{StaticResource SecondaryButton}"/>
-                    <Button x:Name="ExitButton" Content="✖ 종료" Height="32" Padding="12,6" Margin="8,0,0,0" Click="ExitButton_Click" Style="{StaticResource DangerButton}"/>
+            <Grid Margin="15,6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,4">
+                    <Button x:Name="AddNoteButton" Content="➕ 새 멤모" Height="30" Padding="10,5" Click="AddNoteButton_Click" Style="{StaticResource SuccessButton}"/>
+                    <Button x:Name="FindNotesButton" Content="🔍 멤모 찾기" Height="30" Padding="10,5" Margin="6,0,0,0" Click="FindNotesButton_Click" Style="{StaticResource AccentButton}"/>
+                    <Button x:Name="OrganizeAllButton" Content="✨ 정리정렬" Height="30" Padding="10,5" Margin="6,0,0,0" Click="OrganizeAllButton_Click" Style="{StaticResource AccentButton}"/>
+                    <Button x:Name="ResetSizeButton" Content="📊 크기 초기화" Height="30" Padding="10,5" Margin="6,0,0,0" Click="ResetSizeButton_Click" Style="{StaticResource PrimaryButton}"/>
+                    <Button x:Name="ResetFontSizeButton" Content="🔤 폰트 초기화" Height="30" Padding="10,5" Margin="6,0,0,0" Click="ResetFontSizeButton_Click" Style="{StaticResource PrimaryButton}"/>
+                    <Button x:Name="ArrangeNotesButton" Content="📐 멤모 정렬" Height="30" Padding="10,5" Margin="6,0,0,0" Click="ArrangeNotesButton_Click" Style="{StaticResource PrimaryButton}"/>
                 </StackPanel>
+                
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Button x:Name="SwitchUserButton" Content="👤 사용자 전환" Height="30" Padding="10,5" Click="SwitchUserButton_Click" Style="{StaticResource SystemButton}"/>
+                    <Button x:Name="SettingsButton" Content="⚙️ 설정" Height="30" Padding="10,5" Margin="6,0,0,0" Click="SettingsButton_Click" Style="{StaticResource SystemButton}"/>
+                    <Button x:Name="HelpButton" Content="❓ 도움말" Height="30" Padding="10,5" Margin="6,0,0,0" Click="HelpButton_Click" Style="{StaticResource SystemButton}"/>
+                    <Button x:Name="CreditButton" Content="📜 제작자 정보" Height="30" Padding="10,5" Margin="6,0,0,0" Click="CreditButton_Click" Style="{StaticResource SystemButton}"/>
+                    <Button x:Name="MinimizeButton" Content="— 최소화" Height="30" Padding="10,5" Margin="6,0,0,0" Click="MinimizeButton_Click" Style="{StaticResource SecondaryButton}"/>
+                    <Button x:Name="ExitButton" Content="✖ 종료" Height="30" Padding="10,5" Margin="6,0,0,0" Click="ExitButton_Click" Style="{StaticResource DangerButton}"/>
+                </StackPanel>
+                
                 <TextBlock x:Name="CurrentUserText" Text="" Foreground="#E0E0E0" VerticalAlignment="Center" 
-                           HorizontalAlignment="Right" FontSize="13" Margin="0,0,15,0" FontWeight="Medium"/>
+                           HorizontalAlignment="Right" FontSize="13" Margin="0,0,15,0" FontWeight="Medium" Grid.RowSpan="2"/>
             </Grid>
         </Border>
         

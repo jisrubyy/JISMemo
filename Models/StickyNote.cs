@@ -12,7 +12,8 @@ public sealed class StickyNote : INotifyPropertyChanged
     private List<string> _imageDataList = new();
     private double _fontSize = 16.0; // 메모 텍스트 확대/축소(줌) 값
     private double _width = 250;
-    private double _height = 250;
+    private double _height = 300;
+    private string _todoStatus = "Memo";
 
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -140,6 +141,16 @@ public sealed class StickyNote : INotifyPropertyChanged
         {
             _height = value;
             OnPropertyChanged(nameof(Height));
+        }
+    }
+
+    public string TodoStatus
+    {
+        get => _todoStatus;
+        set
+        {
+            _todoStatus = value;
+            OnPropertyChanged(nameof(TodoStatus));
         }
     }
 

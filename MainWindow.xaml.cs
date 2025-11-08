@@ -86,7 +86,10 @@ public partial class MainWindow : Window
     {
         AddNoteButton.Content = Localization.AddNote;
         FindNotesButton.Content = Localization.FindNotes;
+        OrganizeAllButton.Content = Localization.OrganizeAll;
         ArrangeNotesButton.Content = Localization.ArrangeNotes;
+        ResetSizeButton.Content = Localization.ResetSize;
+        ResetFontSizeButton.Content = Localization.ResetFontSize;
         SwitchUserButton.Content = Localization.SwitchUser;
         SettingsButton.Content = Localization.Settings;
         HelpButton.Content = Localization.Help;
@@ -236,7 +239,7 @@ public partial class MainWindow : Window
 
         // Root grid with a header ("창틀"), content area, and status bar
         var rootGrid = new System.Windows.Controls.Grid();
-        rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(24) });
+        rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(36) });
         rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
         rootGrid.RowDefinitions.Add(new System.Windows.Controls.RowDefinition { Height = new System.Windows.GridLength(20) });
 
@@ -246,6 +249,7 @@ public partial class MainWindow : Window
             Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(60, 60, 60))
         };
         headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+        headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = System.Windows.GridLength.Auto });
         headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(24) });
         headerGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(24) });
 
@@ -254,17 +258,61 @@ public partial class MainWindow : Window
             Foreground = System.Windows.Media.Brushes.White,
             VerticalAlignment = System.Windows.VerticalAlignment.Center,
             Margin = new System.Windows.Thickness(6, 0, 0, 0),
-            FontSize = 12
+            FontSize = 18
         };
         var titleBinding = new System.Windows.Data.Binding("Title") { Source = note };
         titleText.SetBinding(System.Windows.Controls.TextBlock.TextProperty, titleBinding);
 
+        var todoButton = new System.Windows.Controls.Button
+        {
+            Width = 80,
+            Height = 28,
+            Margin = new System.Windows.Thickness(0, 4, 6, 4),
+            FontSize = 13,
+            FontWeight = System.Windows.FontWeights.Bold,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Cursor = System.Windows.Input.Cursors.Hand,
+            BorderThickness = new System.Windows.Thickness(1),
+            BorderBrush = System.Windows.Media.Brushes.Gray,
+            Foreground = System.Windows.Media.Brushes.Black,
+            Padding = new System.Windows.Thickness(2, 1, 2, 1)
+        };
+        
+        void UpdateTodoButton(string status)
+        {
+            var (color, text, foreground) = status switch
+            {
+                "ToDo" => (System.Windows.Media.Color.FromRgb(218, 165, 32), "ToDo", System.Windows.Media.Brushes.Black),
+                "Doing" => (System.Windows.Media.Color.FromRgb(34, 139, 34), "Doing", System.Windows.Media.Brushes.White),
+                "Done" => (System.Windows.Media.Color.FromRgb(70, 130, 180), "Done", System.Windows.Media.Brushes.White),
+                _ => (System.Windows.Media.Color.FromRgb(180, 180, 180), "Memo", System.Windows.Media.Brushes.Black)
+            };
+            todoButton.Background = new System.Windows.Media.SolidColorBrush(color);
+            todoButton.Content = text;
+            todoButton.Foreground = foreground;
+        }
+        
+        UpdateTodoButton(note.TodoStatus);
+        
+        todoButton.Click += (s, e) =>
+        {
+            note.TodoStatus = note.TodoStatus switch
+            {
+                "ToDo" => "Doing",
+                "Doing" => "Done",
+                "Done" => "Memo",
+                _ => "ToDo"
+            };
+            UpdateTodoButton(note.TodoStatus);
+        };
+        System.Windows.Controls.Grid.SetColumn(todoButton, 1);
+
         var infoButton = new System.Windows.Controls.Button
         {
             Content = "ℹ",
-            Width = 18,
-            Height = 18,
-            Margin = new System.Windows.Thickness(0, 3, 3, 3),
+            Width = 24,
+            Height = 24,
+            Margin = new System.Windows.Thickness(0, 6, 6, 6),
             HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
             VerticalAlignment = System.Windows.VerticalAlignment.Center,
             Background = System.Windows.Media.Brushes.Transparent,
@@ -272,26 +320,28 @@ public partial class MainWindow : Window
             BorderBrush = System.Windows.Media.Brushes.Transparent,
             Padding = new System.Windows.Thickness(0),
             Cursor = System.Windows.Input.Cursors.Hand,
-            FontSize = 14
+            FontSize = 20
         };
-        System.Windows.Controls.Grid.SetColumn(infoButton, 1);
+        System.Windows.Controls.Grid.SetColumn(infoButton, 2);
 
         var closeButton = new System.Windows.Controls.Button
         {
             Content = "×",
-            Width = 18,
-            Height = 18,
-            Margin = new System.Windows.Thickness(0, 3, 3, 3),
+            Width = 24,
+            Height = 24,
+            Margin = new System.Windows.Thickness(0, 6, 6, 6),
             HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
             VerticalAlignment = System.Windows.VerticalAlignment.Center,
             Background = System.Windows.Media.Brushes.Transparent,
             Foreground = System.Windows.Media.Brushes.White,
             BorderBrush = System.Windows.Media.Brushes.Transparent,
             Padding = new System.Windows.Thickness(0),
-            Cursor = System.Windows.Input.Cursors.Hand
+            Cursor = System.Windows.Input.Cursors.Hand,
+            FontSize = 20
         };
-        System.Windows.Controls.Grid.SetColumn(closeButton, 2);
+        System.Windows.Controls.Grid.SetColumn(closeButton, 3);
         headerGrid.Children.Add(titleText);
+        headerGrid.Children.Add(todoButton);
         headerGrid.Children.Add(infoButton);
         headerGrid.Children.Add(closeButton);
         System.Windows.Controls.Grid.SetRow(headerGrid, 0);
@@ -537,7 +587,7 @@ public partial class MainWindow : Window
             Cursor = System.Windows.Input.Cursors.SizeNWSE,
             Margin = new System.Windows.Thickness(0, 0, 2, 2)
         };
-        System.Windows.Controls.Grid.SetRowSpan(resizeHandle, 2);
+        System.Windows.Controls.Grid.SetRow(resizeHandle, 2);
 
         System.Windows.Point resizeStart = new System.Windows.Point();
         double startWidth = 0, startHeight = 0;
@@ -711,8 +761,12 @@ public partial class MainWindow : Window
     private void RefreshNoteControl(StickyNote note, System.Windows.Controls.Border noteControl)
     {
         var index = _noteControls.IndexOf(noteControl);
+        var savedLeft = note.Left;
+        var savedTop = note.Top;
         NotesCanvas.Children.Remove(noteControl);
         _noteControls.Remove(noteControl);
+        note.Left = savedLeft;
+        note.Top = savedTop;
         CreateNoteControl(note);
     }
 
@@ -781,6 +835,30 @@ public partial class MainWindow : Window
         }
         
         contextMenu.Items.Add(colorMenuItem);
+        
+        var resetSizeMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = Localization.ResetSize
+        };
+        resetSizeMenuItem.Click += (s, e) =>
+        {
+            note.Width = 250;
+            note.Height = 300;
+            noteControl.Width = 250;
+            noteControl.Height = 300;
+        };
+        contextMenu.Items.Add(resetSizeMenuItem);
+        
+        var resetFontSizeMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = Localization.ResetFontSize
+        };
+        resetFontSizeMenuItem.Click += (s, e) =>
+        {
+            note.FontSize = 16.0;
+            RefreshNoteControl(note, noteControl);
+        };
+        contextMenu.Items.Add(resetFontSizeMenuItem);
         contextMenu.Items.Add(new System.Windows.Controls.Separator());
         
         var switchUserMenuItem = new System.Windows.Controls.MenuItem
@@ -1015,6 +1093,54 @@ public partial class MainWindow : Window
         noteControl.BorderThickness = originalThickness;
     }
 
+    private void OrganizeAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        ResetSizeButton_Click(sender, e);
+        ResetFontSizeButton_Click(sender, e);
+        ArrangeNotesButton_Click(sender, e);
+    }
+
+    private void ResetSizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        const double defaultWidth = 250;
+        const double defaultHeight = 300;
+        
+        foreach (var note in _notes)
+        {
+            note.Width = defaultWidth;
+            note.Height = defaultHeight;
+            
+            var noteControl = _noteControls[_notes.IndexOf(note)];
+            noteControl.Width = defaultWidth;
+            noteControl.Height = defaultHeight;
+        }
+    }
+
+    private void ResetFontSizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        const double defaultFontSize = 16.0;
+        
+        for (int i = 0; i < _notes.Count; i++)
+        {
+            var note = _notes[i];
+            var noteControl = _noteControls[i];
+            var savedLeft = note.Left;
+            var savedTop = note.Top;
+            
+            note.FontSize = defaultFontSize;
+            
+            NotesCanvas.Children.Remove(noteControl);
+            _noteControls.RemoveAt(i);
+            
+            note.Left = savedLeft;
+            note.Top = savedTop;
+            
+            CreateNoteControl(note);
+            _noteControls.Insert(i, _noteControls[_noteControls.Count - 1]);
+            _noteControls.RemoveAt(_noteControls.Count - 1);
+        }
+    }
+
     private void ArrangeNotesButton_Click(object sender, RoutedEventArgs e)
     {
         const double startX = 50;
@@ -1023,14 +1149,23 @@ public partial class MainWindow : Window
         
         var availableWidth = MainScrollViewer.ViewportWidth - startX - 50;
         
+        var sortedNotes = _notes
+            .OrderBy(n => n.TodoStatus switch
+            {
+                "ToDo" => 0,
+                "Doing" => 1,
+                "Done" => 2,
+                _ => 3
+            })
+            .ThenByDescending(n => n.ModifiedAt)
+            .ToList();
+        
         double currentX = startX;
         double currentY = startY;
         double rowHeight = 0;
         
-        for (int i = 0; i < _notes.Count; i++)
+        foreach (var note in sortedNotes)
         {
-            var note = _notes[i];
-            
             if (currentX > startX && currentX + note.Width > availableWidth)
             {
                 currentX = startX;
@@ -1041,7 +1176,7 @@ public partial class MainWindow : Window
             note.Left = currentX;
             note.Top = currentY;
             
-            var noteControl = _noteControls[i];
+            var noteControl = _noteControls[_notes.IndexOf(note)];
             System.Windows.Controls.Canvas.SetLeft(noteControl, note.Left);
             System.Windows.Controls.Canvas.SetTop(noteControl, note.Top);
             UpdateMinimapRect(note);

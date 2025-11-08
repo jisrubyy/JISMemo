@@ -100,14 +100,23 @@ public static class Localization
 • Ctrl + 마우스 휠: 폰트 크기 조절 (8~48pt)
 • 모든 변경사항은 자동으로 저장됩니다
 
+ToDo 상태 관리 (v1.5 신기능)
+
+• 메모 상단 상태 버튼: ToDo, Doing, Done, Memo 중 선택
+  - ToDo: 노란색 (해야 할 일)
+  - Doing: 녹색 (진행 중)
+  - Done: 파란색 (완료)
+  - Memo: 회색 (일반 메모)
+• 버튼 클릭으로 상태 변경 가능
+• 메모 정렬 시 ToDo 우선순위로 자동 정렬
+
 메모 찾기 및 정리
 
 • 🔍 메모 찾기: 제목이나 내용으로 메모 검색
-  - 검색창에 키워드 입력하여 실시간 필터링
-  - 메모 더블클릭으로 해당 메모로 이동
-• 📐 메모 정렬: 모든 메모를 자동으로 정리
-  - 현재 창 크기에 맞춰 깔끔하게 배치
-  - 메모 크기를 고려하여 겹치지 않게 정렬
+• ✨ 정리정렬: 크기+폰트 초기화 + 정렬을 한번에
+• 📊 크기 초기화: 모든 메모를 250x300 크기로
+• 🔤 폰트 초기화: 모든 메모 폰트를 16pt로
+• 📐 메모 정렬: ToDo 상태 우선순위로 자동 정렬
 
 이미지 사용하기
 
@@ -141,14 +150,23 @@ Note Management
 • Ctrl + Mouse Wheel: Adjust font size (8~48pt)
 • All changes are automatically saved
 
+ToDo Status Management (v1.5 New Feature)
+
+• Note header status button: Select from ToDo, Doing, Done, Memo
+  - ToDo: Yellow (tasks to do)
+  - Doing: Green (in progress)
+  - Done: Blue (completed)
+  - Memo: Gray (general notes)
+• Click button to change status
+• Notes auto-sort by ToDo priority when arranged
+
 Finding and Organizing Notes
 
 • 🔍 Find Notes: Search notes by title or content
-  - Type keywords for real-time filtering
-  - Double-click a note to navigate to it
-• 📐 Arrange Notes: Auto-organize all notes
-  - Arranges notes neatly based on current window size
-  - Considers note sizes to prevent overlapping
+• ✨ Organize All: Reset size + font + arrange in one click
+• 📊 Reset Size: Reset all notes to 250x300
+• 🔤 Reset Font: Reset all note fonts to 16pt
+• 📐 Arrange Notes: Auto-sort by ToDo priority
 
 Using Images
 
@@ -201,4 +219,13 @@ UI Scaling
     public static string CannotDeleteDefault => CurrentLanguage == "ko" ? "기본 사용자는 삭제할 수 없습니다." : "Cannot delete default user.";
     public static string DeleteUserConfirm => CurrentLanguage == "ko" ? "정말 삭제하시겠습니까?" : "Are you sure you want to delete?";
     public static string SelectUserFirst => CurrentLanguage == "ko" ? "사용자를 선택해주세요." : "Please select a user.";
+    
+    // ToDo Status
+    public static string TodoStatus => CurrentLanguage == "ko" ? "상태" : "Status";
+    public static string Todo => CurrentLanguage == "ko" ? "ToDo" : "ToDo";
+    public static string Doing => CurrentLanguage == "ko" ? "Doing" : "Doing";
+    public static string Done => CurrentLanguage == "ko" ? "Done" : "Done";
+    public static string ResetSize => CurrentLanguage == "ko" ? "📊 크기 초기화" : "📊 Reset Size";
+    public static string ResetFontSize => CurrentLanguage == "ko" ? "🔤 폰트 크기 초기화" : "🔤 Reset Font Size";
+    public static string OrganizeAll => CurrentLanguage == "ko" ? "✨ 정리정렬" : "✨ Organize All";
 }
