@@ -39,6 +39,7 @@
     </PropertyGroup>
     <ItemGroup>
       <Resource Include="Resources\JISMemo_Icon.ico" />
+      <Resource Include="Resources\blue-button.png" />
     </ItemGroup>
 
 </Project>
