@@ -30,6 +30,7 @@
         <ApplicationIcon>Resources\JISMemo_Icon.ico</ApplicationIcon>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>Jisrubyy.snk</AssemblyOriginatorKeyFile>
+        <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     </PropertyGroup>
 
     <!-- Release-specific tweaks to keep output to a single EXE (no PDB) -->
