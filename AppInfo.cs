@@ -5,7 +5,7 @@ namespace JISMemo;
 
 public static class AppInfo
 {
-    public const string Version = "1.5";
+    public const string Version = "1.6";
     public static string FullVersion => $"{Version}.{GetBuildDate(Assembly.GetExecutingAssembly()):yyyyMMdd}";
     public const string AppName = "JISMemo";
     public const string Developer = "Jisrubyy";

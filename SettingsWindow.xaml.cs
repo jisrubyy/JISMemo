@@ -315,8 +315,9 @@ public partial class SettingsWindow : Window
             {
                 var backup = new UserBackup { Username = currentUser, Notes = notes };
                 var json = JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(dialog.FileName, json);
+                await Task.Run(() => File.WriteAllText(dialog.FileName, json));
                 MessageBox.Show($"{notes.Count}개 메모 내보내기 완료", "성공", MessageBoxButton.OK, MessageBoxImage.Information);
+                LogService.Info($"데이터 내보내기 성공: {dialog.FileName}");
             }
         }
         catch (Exception ex)
@@ -420,10 +421,11 @@ public partial class SettingsWindow : Window
             var targetPath = Path.Combine(appData, $"notes_{targetUser}.json");
             
             var notesJson = JsonSerializer.Serialize(backup.Notes, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(targetPath, notesJson);
+            await Task.Run(() => File.WriteAllText(targetPath, notesJson));
             userService.SetCurrentUser(targetUser);
             
             MessageBox.Show($"{backup.Notes.Count}개 메모 가져오기 완료\n재시작 후 '{targetUser}'로 자동 로그인", "성공", MessageBoxButton.OK, MessageBoxImage.Information);
+            LogService.Info($"데이터 가져오기 성공: {targetUser}");
         }
         catch (Exception ex)
         {

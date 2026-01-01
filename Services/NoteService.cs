@@ -98,17 +98,24 @@ public class NoteService
             
             return JsonSerializer.Deserialize<List<StickyNote>>(json) ?? new List<StickyNote>();
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Error($"메모 로드 실패 (경로: {_dataPath})", ex);
             return new List<StickyNote>();
         }
     }
 
     public async Task SaveNotesAsync(List<StickyNote> notes, string? password = null)
     {
+        string tempPath = _dataPath + ".tmp";
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_dataPath)!);
+            var directory = Path.GetDirectoryName(_dataPath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             var json = JsonSerializer.Serialize(notes, new JsonSerializerOptions { WriteIndented = true });
             
             if (IsEncryptionEnabled() && !string.IsNullOrEmpty(password))
@@ -116,11 +123,28 @@ public class NoteService
                 json = EncryptionService.Encrypt(json, password);
             }
             
-            await File.WriteAllTextAsync(_dataPath, json);
+            // 임시 파일에 쓰기
+            await File.WriteAllTextAsync(tempPath, json);
+            
+            // 성공하면 기존 파일 교체
+            if (File.Exists(_dataPath))
+            {
+                File.Replace(tempPath, _dataPath, null);
+            }
+            else
+            {
+                File.Move(tempPath, _dataPath);
+            }
+            
+            LogService.Info($"메모 저장 성공: {notes.Count}개 (사용자: {_currentUser})");
         }
-        catch
+        catch (Exception ex)
         {
-            // 저장 실패 시 무시
+            LogService.Error($"메모 저장 중 치명적 오류 발생 (사용자: {_currentUser})", ex);
+            if (File.Exists(tempPath))
+            {
+                try { File.Delete(tempPath); } catch { }
+            }
         }
     }
 

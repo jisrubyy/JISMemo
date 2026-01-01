@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using JISMemo.Services;
 
 namespace JISMemo;
 
@@ -102,6 +103,10 @@ public partial class App : System.Windows.Application
     {
         try
         {
+            // 전역 LogService에도 기록
+            if (level == "ERROR") LogService.Error(message);
+            else LogService.Info(message);
+
             var ts = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss.fff");
             var line = $"{ts} [{level}] {message}";
             var file = Path.Combine(_logDir, "JISMemo.startup.log");

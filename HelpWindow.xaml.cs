@@ -14,6 +14,7 @@ public partial class HelpWindow : Window
         var developer = Localization.CurrentLanguage == "ko" ? "개발자" : "Developer";
         VersionInfo = $"{AppInfo.AppName} v{AppInfo.FullVersion}\n{description}\n{developer}: {AppInfo.Developer}\nContact: {AppInfo.ContactEmail1}\n{AppInfo.ContactEmail2}";
         DataContext = this;
+        HelpContentText.Text = Localization.HelpContent;
         OkButton.Content = Localization.OK;
     }
 

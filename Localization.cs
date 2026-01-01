@@ -128,7 +128,13 @@ ToDo 상태 관리 (v1.5 신기능)
 UI 크기 조절
 
 • 하단 상태바의 슬라이더로 UI 크기 조절 (80% ~ 150%)
-• 시력이 안 좋은 경우 확대하여 사용 가능";
+• 시력이 안 좋은 경우 확대하여 사용 가능
+
+v2.0 최근 개선 사항
+• 데이터 안정성 강화: 파일 교체 방식 저장(Safe-Save) 보완으로 데이터 유실 방지
+• 성능 및 응답성 개선: 대량 메모 처리 및 정렬 시 UI 멈춤 현상 제거
+• 로그 시스템 구축: 문제 발생 시 원인 파악을 위한 로깅 시스템 도입
+• 내보내기/불러오기 최적화: 백그라운드 작업 처리로 안정성 및 속도 향상";
     }
     
     private static string GetEnglishHelp()
@@ -178,7 +184,13 @@ Using Images
 UI Scaling
 
 • Use the slider in the bottom status bar to adjust UI size (80% ~ 150%)
-• Enlarge for better visibility if needed";
+• Enlarge for better visibility if needed
+
+v2.0 Recent Improvements
+• Enhanced Data Stability: Prevents data loss with Safe-Save (write-temp-then-replace)
+• Performance & Responsiveness: Fixed UI freezing during massive note processing
+• Diagnostic Logging: Introduced system logs for better troubleshooting
+• Optimized Import/Export: Background processing for improved stability and speed";
     }
     
     // Password Windows

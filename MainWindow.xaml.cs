@@ -26,6 +26,8 @@ public partial class MainWindow : Window
     private string _currentUser = "";
     private readonly SettingsService _settingsService = new();
     private AppSettings _appSettings;
+    private System.Timers.Timer _autoSaveTimer;
+    private const int AutoSaveDelayMs = 2000;
 
     public MainWindow()
     {
@@ -58,10 +60,30 @@ public partial class MainWindow : Window
         Loaded += MainWindow_Loaded;
         Closing += MainWindow_Closing;
         StateChanged += MainWindow_StateChanged;
-        UpdateUITexts();
-        InitializeSystemTray();
-        UpdateCurrentUserDisplay();
         ApplyBackgroundColor();
+
+        // 자동 저장 타이머 초기화 (디바운스용)
+        _autoSaveTimer = new System.Timers.Timer(AutoSaveDelayMs);
+        _autoSaveTimer.AutoReset = false;
+        _autoSaveTimer.Elapsed += async (s, e) => await Dispatcher.InvokeAsync(async () => await SaveCurrentNotesAsync());
+    }
+
+    private async Task SaveCurrentNotesAsync()
+    {
+        try
+        {
+            await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("자동 저장 중 오류 발생", ex);
+        }
+    }
+
+    private void RequestAutoSave()
+    {
+        _autoSaveTimer.Stop();
+        _autoSaveTimer.Start();
     }
     
     private void ApplyBackgroundColor()
@@ -205,7 +227,8 @@ public partial class MainWindow : Window
     {
         e.Cancel = true;
         Hide();
-        await _noteService.SaveNotesAsync(_notes.ToList(), _currentPassword);
+        _autoSaveTimer.Stop();
+        await SaveCurrentNotesAsync();
     }
 
     private void AddNoteButton_Click(object sender, RoutedEventArgs e)
@@ -381,10 +404,12 @@ public partial class MainWindow : Window
             FontSize = note.FontSize
         };
 
-        // 텍스트 변경 시 모델에 반영
+        // 텍스트 변경 시 모델에 반영 및 자동 저장 요청
         textBox.TextChanged += (s, e) => 
         {
             note.Content = textBox.Text;
+            note.ModifiedAt = DateTime.Now;
+            RequestAutoSave();
         };
 
         // Ctrl + 마우스 휠로 폰트 크기 확대/축소 (줌)
@@ -1093,14 +1118,19 @@ public partial class MainWindow : Window
         noteControl.BorderThickness = originalThickness;
     }
 
-    private void OrganizeAllButton_Click(object sender, RoutedEventArgs e)
+    private async void OrganizeAllButton_Click(object sender, RoutedEventArgs e)
     {
-        ResetSizeButton_Click(sender, e);
-        ResetFontSizeButton_Click(sender, e);
-        ArrangeNotesButton_Click(sender, e);
+        await ResetSizeAsync();
+        await ResetFontSizeAsync();
+        ArrangeNotes();
     }
 
-    private void ResetSizeButton_Click(object sender, RoutedEventArgs e)
+    private async void ResetSizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetSizeAsync();
+    }
+
+    private Task ResetSizeAsync()
     {
         const double defaultWidth = 250;
         const double defaultHeight = 300;
@@ -1114,9 +1144,15 @@ public partial class MainWindow : Window
             noteControl.Width = defaultWidth;
             noteControl.Height = defaultHeight;
         }
+        return Task.CompletedTask;
     }
 
-    private void ResetFontSizeButton_Click(object sender, RoutedEventArgs e)
+    private async void ResetFontSizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        await ResetFontSizeAsync();
+    }
+
+    private async Task ResetFontSizeAsync()
     {
         const double defaultFontSize = 16.0;
         
@@ -1138,17 +1174,26 @@ public partial class MainWindow : Window
             CreateNoteControl(note);
             _noteControls.Insert(i, _noteControls[_noteControls.Count - 1]);
             _noteControls.RemoveAt(_noteControls.Count - 1);
+            
+            // 점진적으로 UI 업데이트를 허용하여 프리징 방지
+            if (i % 10 == 0) await Task.Yield();
         }
     }
 
     private void ArrangeNotesButton_Click(object sender, RoutedEventArgs e)
+    {
+        ArrangeNotes();
+    }
+
+    private void ArrangeNotes()
     {
         const double startX = 50;
         const double startY = 50;
         const double spacing = 20;
         
         var availableWidth = MainScrollViewer.ViewportWidth - startX - 50;
-        
+        if (availableWidth < 300) availableWidth = 800; // 뷰포트가 작을 경우 기본값
+
         var sortedNotes = _notes
             .OrderBy(n => n.TodoStatus switch
             {
@@ -1184,6 +1229,7 @@ public partial class MainWindow : Window
             currentX += note.Width + spacing;
             rowHeight = Math.Max(rowHeight, note.Height);
         }
+        RequestAutoSave();
     }
 
     protected override void OnClosed(EventArgs e)
